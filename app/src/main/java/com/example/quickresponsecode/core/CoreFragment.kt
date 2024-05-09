@@ -71,11 +71,11 @@ open class CoreFragment : Fragment(), CoreBehavior {
 
     override fun showLoading() {}
     override fun makeStatusBarTransparent() {
-        with(requireActivity().window) {
+        /*with(requireActivity().window) {
             setFlags(
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
             )
-        }
+        }*/
     }
 }
