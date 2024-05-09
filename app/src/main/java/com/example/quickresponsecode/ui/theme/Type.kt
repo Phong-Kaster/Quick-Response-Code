@@ -1,6 +1,7 @@
 package com.example.quickresponsecode.ui.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -31,4 +32,17 @@ val Typography = Typography(
         letterSpacing = 0.5.sp
     )
     */
+)
+
+fun customizedTextStyle(
+    fontSize: Int = 14,
+    fontWeight: Int = 400,
+    lineHeight: Int = (fontSize * 1.5f).toInt(),
+    color: Color = TextColor3
+): TextStyle = TextStyle(
+    fontFamily = FontFamily.Default,
+    fontSize = fontSize.sp,
+    fontWeight = FontWeight(fontWeight),
+    lineHeight = lineHeight.sp,
+    color = color,
 )

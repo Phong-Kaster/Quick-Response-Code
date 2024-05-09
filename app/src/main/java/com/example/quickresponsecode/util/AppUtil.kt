@@ -7,15 +7,19 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.util.Log
 import android.view.Window
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.example.quickresponsecode.R
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 
 object AppUtil {
     fun logcat(message: String, tag: String = "Jetpack Compose", enableDivider: Boolean = false) {
-        if(enableDivider){
+        if (enableDivider) {
             Log.d(tag, "----------------------------")
         }
         Log.d(tag, "-> message: $message")
@@ -62,4 +66,13 @@ object AppUtil {
 
         return intent
     }
+
+    suspend fun Context.getCameraProvider(): ProcessCameraProvider =
+        suspendCoroutine { continuation ->
+            ProcessCameraProvider.getInstance(this).also { cameraProvider ->
+                cameraProvider.addListener({
+                    continuation.resume(cameraProvider.get())
+                }, ContextCompat.getMainExecutor(this))
+            }
+        }
 }
