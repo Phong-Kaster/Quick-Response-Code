@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Quick Response Code</string>
+    <string name="english">English</string>
+    <string name="vietnamese">Vietnamese</string>
+    <string name="german">German</string>
+    <string name="french">French</string>
+    <string name="hindi">Hindi</string>
+    <string name="japanese">Japanese</string>
+    <string name="korean">Korean</string>
+</resources>
