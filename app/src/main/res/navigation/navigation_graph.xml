@@ -6,6 +6,6 @@
 
     <fragment
         android:id="@+id/homeFragment"
-        android:name="com.example.quickresponsecode.ui.fragment.HomeFragment" />
+        android:name="com.example.quickresponsecode.ui.fragment.home.HomeFragment" />
 
 </navigation>

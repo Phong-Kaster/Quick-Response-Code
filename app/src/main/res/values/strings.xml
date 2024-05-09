@@ -7,4 +7,6 @@
     <string name="hindi">Hindi</string>
     <string name="japanese">Japanese</string>
     <string name="korean">Korean</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel\n</string>
 </resources>

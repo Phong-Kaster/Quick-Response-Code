@@ -1,29 +1,33 @@
-package com.example.quickresponsecode.ui.fragment
+package com.example.quickresponsecode.ui.fragment.home
 
 import android.os.Bundle
+import android.util.Log
+import android.util.Size
 import android.view.View
-import android.widget.Toast
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,10 +44,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.viewModels
 import com.example.flashlightenhancedversion.lifecycleobserver.CameraPermissionLifecycleObserver
 import com.example.jetpack.core.CoreFragment
 import com.example.jetpack.core.CoreLayout
 import com.example.quickresponsecode.R
+import com.example.quickresponsecode.ui.component.CoreAlertDialog
 import com.example.quickresponsecode.util.AppUtil.getCameraProvider
 import com.example.quickresponsecode.util.PermissionUtil
 import dagger.hilt.android.AndroidEntryPoint
@@ -51,6 +58,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class HomeFragment : CoreFragment() {
 
+    private val viewModel: HomeViewModel by viewModels()
     private lateinit var cameraPermissionObserver: CameraPermissionLifecycleObserver
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -92,9 +100,17 @@ class HomeFragment : CoreFragment() {
     override fun ComposeView() {
         super.ComposeView()
         HomeLayout(
-            onOpenGallery = {
-                showToast("Open Gallery")
+            onOpenGallery = { showToast("Open Gallery") },
+            onReturnImageProxy = { imageProxy: ImageProxy ->
+                Log.d("SCANNER", "ComposeView - run process image ")
+                viewModel.processImage(imageProxy)
+
             }
+        )
+
+        CoreAlertDialog(
+            enable = viewModel.showDialog.collectAsState().value,
+            onDismissRequest = { viewModel.dismissDialog() }
         )
     }
 }
@@ -102,18 +118,42 @@ class HomeFragment : CoreFragment() {
 @Composable
 fun HomeLayout(
     onOpenGallery: () -> Unit = {},
+    onReturnImageProxy: (ImageProxy) -> Unit = {},
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
-    val previewView = remember { PreviewView(context) }
-
-
     var enableFlashlight by remember { mutableStateOf(false) }
-    val cameraSelector = remember {
-        CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
-    }
-    var camera: Camera? by remember { mutableStateOf(null) }
 
+
+    /** Configure Camera X Preview */
+    val previewView = remember { PreviewView(context) }
+    var camera: Camera? by remember { mutableStateOf(null) }
+    val cameraSelector = remember {
+        CameraSelector
+            .Builder()
+            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+            .build()
+    }
+
+
+    /** Configure Image Analysis */
+    val executor = ContextCompat.getMainExecutor(context)
+    val resolutionSelector: ResolutionSelector = remember {
+        ResolutionSelector
+            .Builder()
+            .setResolutionStrategy(
+                ResolutionStrategy(
+                    Size(1280, 720),
+                    ResolutionStrategy.FALLBACK_RULE_NONE
+                )
+            )
+            .build()
+    }
+
+    val imageAnalysis = ImageAnalysis.Builder()
+        .setResolutionSelector(resolutionSelector)
+        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+        .build()
 
     LaunchedEffect(
         key1 = enableFlashlight,
@@ -125,12 +165,17 @@ fun HomeLayout(
             val cameraProvider = context.getCameraProvider()
             val preview = androidx.camera.core.Preview.Builder().build()
 
+            imageAnalysis.setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
+                onReturnImageProxy(imageProxy)
+            })
+
 
             cameraProvider.unbindAll()
             val bindingCamera = cameraProvider.bindToLifecycle(
                 lifecycleOwner,
                 cameraSelector,
-                preview
+                preview,
+                imageAnalysis
             )
 
             camera = bindingCamera

@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -82,8 +83,10 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.navigation.compose)
 
+
     // Preferences DataStore - https://developer.android.com/topic/libraries/architecture/datastore#preferences-datastore-dependencies
     implementation(libs.androidx.datastore.preferences)
+
 
     // Get started with Camera X - https://developer.android.com/codelabs/camerax-getting-started#0
     implementation(libs.androidx.camera.core)
@@ -92,6 +95,10 @@ dependencies {
     implementation(libs.androidx.camera.video)
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.camera.extensions)
+
+
+    // Scan barcodes with ML Kit on Android - https://developers.google.com/ml-kit/vision/barcode-scanning/android#kotlin
+    implementation(libs.barcode.scanning)
 }
 
 // Dependency injection with Hilt - Allow references to generated code
