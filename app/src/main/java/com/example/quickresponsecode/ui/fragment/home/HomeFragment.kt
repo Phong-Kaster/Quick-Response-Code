@@ -11,20 +11,27 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,6 +48,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -50,7 +59,9 @@ import com.example.flashlightenhancedversion.lifecycleobserver.CameraPermissionL
 import com.example.jetpack.core.CoreFragment
 import com.example.jetpack.core.CoreLayout
 import com.example.quickresponsecode.R
-import com.example.quickresponsecode.ui.component.CoreAlertDialog
+import com.example.quickresponsecode.data.enums.CameraNavigationButton
+import com.example.quickresponsecode.ui.component.OutlineButton
+import com.example.quickresponsecode.ui.fragment.home.component.CameraNavigationButtonLayout
 import com.example.quickresponsecode.util.AppUtil.getCameraProvider
 import com.example.quickresponsecode.util.PermissionUtil
 import dagger.hilt.android.AndroidEntryPoint
@@ -99,25 +110,30 @@ class HomeFragment : CoreFragment() {
     @Composable
     override fun ComposeView() {
         super.ComposeView()
+
+        var chosenButton by remember { mutableStateOf(CameraNavigationButton.Scan) }
+
         HomeLayout(
-            onOpenGallery = { showToast("Open Gallery") },
+            showToast = viewModel.showToast.collectAsState().value,
+            chosenButton = chosenButton,
+            onClickCameraNavigationButton = {
+                chosenButton = it
+            },
             onReturnImageProxy = { imageProxy: ImageProxy ->
                 Log.d("SCANNER", "ComposeView - run process image ")
-                viewModel.processImage(imageProxy)
-
+                viewModel.processImage(
+                    imageProxy = imageProxy,
+                )
             }
-        )
-
-        CoreAlertDialog(
-            enable = viewModel.showDialog.collectAsState().value,
-            onDismissRequest = { viewModel.dismissDialog() }
         )
     }
 }
 
 @Composable
 fun HomeLayout(
-    onOpenGallery: () -> Unit = {},
+    showToast: Boolean = true,
+    chosenButton: CameraNavigationButton = CameraNavigationButton.Scan,
+    onClickCameraNavigationButton: (CameraNavigationButton) -> Unit = {},
     onReturnImageProxy: (ImageProxy) -> Unit = {},
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -214,48 +230,86 @@ fun HomeLayout(
                         .align(BiasAlignment(0f, -0.2f)),
                 )
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(
-                        space = 8.dp,
-                        alignment = Alignment.End
-                    ),
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 20.dp)
+                        .padding(top = 0.dp, bottom = 20.dp, start = 10.dp, end = 10.dp)
                         .align(Alignment.BottomCenter)
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_image),
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(56.dp)
-                            .clip(shape = RoundedCornerShape(20.dp))
-                            .clickable(
-                                enabled = true,
-                                onClick = onOpenGallery
-                            )
-                            .background(color = Color(0x66000000))
-                            .padding(16.dp)
+                    AnimatedVisibility(
+                        visible = showToast,
+                        content = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(shape = RoundedCornerShape(50.dp))
+                                    .background(color = Color(0xFFFDF6E9))
+                                    .padding(vertical = 16.dp, horizontal = 16.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_warning),
+                                    contentDescription = null,
+                                    tint = Color(0xFFEEA720),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = stringResource(R.string.the_qr_code_scanned_is_invalid_please_give_it_another_try),
+                                    color = Color(0xFF333333),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(0.7F)
+                                )
+                                /*OutlineButton(
+                                    text = "Connect",
+                                    textColor = Color(0xFFF1B94D),
+                                    borderStroke = BorderStroke(
+                                        width = 1.dp,
+                                        color = Color(0xFFF1B94D)
+                                    ),
+                                    paddingVertical = 10.dp,
+                                    paddingHorizontal = 10.dp,
+                                    onClick = {}
+                                )*/
+                            }
+                        }
                     )
 
-                    Image(
-                        painter = painterResource(
-                            id = if (enableFlashlight) R.drawable.ic_flash_on
-                            else R.drawable.ic_flash_off
-                        ),
-                        contentDescription = null,
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier
-                            .size(56.dp)
-                            .clip(shape = RoundedCornerShape(20.dp))
-                            .clickable(
-                                enabled = true,
+                            .fillMaxWidth()
+
+                            .clip(shape = RoundedCornerShape(50.dp))
+                            .background(color = Color.Black)
+                            .padding(horizontal = 5.dp, vertical = 10.dp)
+                    ) {
+                        CameraNavigationButton.entries.forEach {
+                            CameraNavigationButtonLayout(
+                                modifier = Modifier.weight(1f),
+                                enable = chosenButton == it,
+                                icon = it.icon,
+                                text = it.text,
                                 onClick = {
-                                    enableFlashlight = !enableFlashlight
-                                })
-                            .background(color = Color(0x66000000))
-                            .padding(12.dp)
-                    )
+                                    onClickCameraNavigationButton(it)
+                                }
+                            )
+
+                            /*if (it != CameraNavigationButton.Import) {
+                                VerticalDivider(
+                                    modifier = Modifier
+                                        .height(20.dp)
+                                        .padding(horizontal = 3.dp)
+                                        .background(color = Color.White.copy(alpha = 0.75F))
+                                )
+                            }*/
+                        }
+                    }
                 }
             }
         }

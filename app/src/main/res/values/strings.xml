@@ -7,6 +7,11 @@
     <string name="hindi">Hindi</string>
     <string name="japanese">Japanese</string>
     <string name="korean">Korean</string>
-    <string name="ok">Ok</string>
-    <string name="cancel">Cancel\n</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="scan">Scan</string>
+    <string name="generate">Generate</string>
+    <string name="import_lowercase">Import</string>
+    <string name="the_qr_code_scanned_is_invalid_please_give_it_another_try">The QR code scanned is invalid. Please give it another try!</string>
+    <string name="connect">Connect</string>
 </resources>

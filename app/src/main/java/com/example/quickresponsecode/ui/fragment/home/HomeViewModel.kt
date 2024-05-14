@@ -20,10 +20,10 @@ class HomeViewModel
 @Inject
 constructor() : ViewModel() {
 
-    private var _showDialog = MutableStateFlow<Boolean>(false)
-    val showDialog = _showDialog.asStateFlow()
+    private var _showToast = MutableStateFlow<Boolean>(false)
+    val showToast = _showToast.asStateFlow()
 
-    private var _qrCodeResult = MutableStateFlow<String>("")
+    private var _qrCodeResult = MutableStateFlow<String?>("")
     val qrCodeResult = _qrCodeResult.asStateFlow()
 
     // Configure scanner
@@ -34,8 +34,12 @@ constructor() : ViewModel() {
 
     val scanner: BarcodeScanner by lazy { BarcodeScanning.getClient(options) }
 
-    fun processImage(imageProxy: ImageProxy?) {
+    fun processImage(
+        imageProxy: ImageProxy?,
+    ) {
+        Log.d("SCANNER", "----------------------")
         if (imageProxy == null) return
+
 
         val inputImage = imageProxy.toInputImage()
         if (inputImage == null) {
@@ -46,7 +50,10 @@ constructor() : ViewModel() {
         scanner
             .process(inputImage)
             .addOnSuccessListener { barcodes ->
-                Log.d("SCANNER", "Home View Model - addOnSuccessListener")
+                if (barcodes.isEmpty()) {
+                    imageProxy.close()
+                    return@addOnSuccessListener
+                }
 
                 for (barcode in barcodes) {
                     val bounds = barcode.boundingBox
@@ -57,8 +64,13 @@ constructor() : ViewModel() {
                     val valueType: Int = barcode.valueType
 
 
-                    _qrCodeResult.value = ScannerUtil.getQuickResponseCodeResult(barcode = barcode, valueType = valueType)
-                    _showDialog.value = true
+                    _qrCodeResult.value = ScannerUtil.getQuickResponseCodeResult(
+                        barcode = barcode,
+                        valueType = valueType
+                    )
+                    Log.d("SCANNER", "processImage - qrCodeResult.value: ${_qrCodeResult.value}")
+                    _showToast.value = if (_qrCodeResult.value.isNullOrEmpty()) true else false
+                    imageProxy.close()
                 }
             }
             .addOnFailureListener { exception: Exception ->
@@ -68,9 +80,8 @@ constructor() : ViewModel() {
             }
     }
 
-    fun dismissDialog(){
-        _showDialog.value = false
+    fun dismissDialog() {
+        _showToast.value = false
         _qrCodeResult.value = ""
-
     }
 }
