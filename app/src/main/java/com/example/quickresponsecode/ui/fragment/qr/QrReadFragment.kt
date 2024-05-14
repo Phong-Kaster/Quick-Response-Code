@@ -1,5 +1,17 @@
 package com.example.quickresponsecode.ui.fragment.qr
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.net.wifi.WifiManager
+import android.net.wifi.WifiNetworkSpecifier
+import android.os.Build
+import android.os.Bundle
+import android.os.PatternMatcher
+import android.view.View
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,6 +26,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,25 +50,93 @@ import com.example.quickresponsecode.ui.component.SolidButton
 import com.example.quickresponsecode.util.NavigationUtil.safeNavigateUp
 import dagger.hilt.android.AndroidEntryPoint
 
+/**
+ * https://icircuit.net/android-connecting-wifi-programmatically/1814
+ */
 @AndroidEntryPoint
 class QrReadFragment : CoreFragment() {
+
+    private var ssid: String? by mutableStateOf(null)
+    private var password: String? by mutableStateOf(null)
+    private var type: Int? by mutableStateOf(null)
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        getWifiInfo()
+    }
+
+    private fun getWifiInfo() {
+        ssid = arguments?.getString("wifiSSID")
+        password = arguments?.getString("wifiPassword")
+        type = arguments?.getInt("wifiType")
+    }
+
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun connectWifi(password: String?, ssid:String?) {
+        if (password.isNullOrEmpty() || ssid.isNullOrEmpty()) {
+            return
+        }
+
+        val wifiManager =  requireContext().getSystemService(Context.WIFI_SERVICE)
+
+        val connectivityManager =
+            requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val wifiSpecifier = WifiNetworkSpecifier.Builder()
+            .setSsid(ssid)
+            .setWpa2Passphrase(password)
+            .setSsidPattern(PatternMatcher(ssid, PatternMatcher.PATTERN_PREFIX))
+            .build()
+
+        val networkRequest = NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .setNetworkSpecifier(wifiSpecifier)
+            .build()
+
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                showToast("onAvailable")
+            }
+
+            override fun onUnavailable() {
+                super.onUnavailable()
+                showToast("onUnavailable")
+            }
+
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                showToast("onLost")
+            }
+        }
+        connectivityManager.requestNetwork(networkRequest, networkCallback)
+    }
 
     @Composable
     override fun ComposeView() {
         super.ComposeView()
         QrReadLayout(
+            wifiSSID = ssid ?: "",
+            wifiPassword = password ?: "",
             onBack = { safeNavigateUp() },
-            wifiName = "Example",
-            wifiPassword = "12345678"
+            onConnect = {
+                connectWifi(ssid, password)
+            },
+            onShare = { showToast(requireContext().getString(R.string.share_with_my_community)) }
         )
     }
 }
 
 @Composable
 fun QrReadLayout(
-    onBack: () -> Unit = {},
-    wifiName: String,
+    wifiSSID: String,
     wifiPassword: String,
+
+    onBack: () -> Unit = {},
+    onConnect: () -> Unit = {},
+    onShare: () -> Unit = {},
 ) {
     CoreLayout(
         topBar = {
@@ -120,7 +203,7 @@ fun QrReadLayout(
                         )
 
                         Text(
-                            text = wifiName,
+                            text = wifiSSID,
                             style = TextStyle(
                                 color = Color(0xFF333333),
                                 fontSize = 16.sp,
@@ -157,7 +240,7 @@ fun QrReadLayout(
                 SolidButton(
                     modifier = Modifier.fillMaxWidth(),
                     marginHorizontal = 0.dp,
-                    onClick = {},
+                    onClick = onConnect,
                     backgroundColor = Color(0xFF1C68FB),
                     textColor = Color.White,
                     text = stringResource(id = R.string.connect),
@@ -174,7 +257,7 @@ fun QrReadLayout(
                     marginHorizontal = 0.dp,
                     marginVertical = 0.dp,
                     borderStroke = BorderStroke(width = 1.dp, color = Color(0xFF1C68FB)),
-                    onClick = {},
+                    onClick = onShare,
                     backgroundColor = Color.White,
                     textColor = Color(0xFF1C68FB),
                     textStyle = TextStyle(
@@ -191,7 +274,7 @@ fun QrReadLayout(
 @Composable
 private fun PreviewQrRead() {
     QrReadLayout(
-        wifiName = "Wifi Name",
+        wifiSSID = "Wifi Name",
         wifiPassword = "Wifi Password",
     )
 }

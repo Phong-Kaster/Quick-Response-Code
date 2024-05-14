@@ -5,6 +5,9 @@
     <!-- INTERNET -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+
 
     <!-- CAMERA -->
     <!-- If you use android.hardware.camera without .any, it will not work if you have a device without a back camera, such as most Chromebooks. The second line adds the permission to access that camera. -->
