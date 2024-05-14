@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.home
+package com.example.quickresponsecode.ui.fragment.qr
 
 import android.content.Intent
 import android.os.Bundle
@@ -18,6 +18,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,13 +29,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,28 +58,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.flashlightenhancedversion.lifecycleobserver.CameraPermissionLifecycleObserver
 import com.example.jetpack.core.CoreFragment
 import com.example.jetpack.core.CoreLayout
 import com.example.quickresponsecode.R
 import com.example.quickresponsecode.data.enums.CameraNavigationButton
 import com.example.quickresponsecode.ui.component.OutlineButton
-import com.example.quickresponsecode.ui.fragment.home.component.CameraNavigationButtonLayout
+import com.example.quickresponsecode.ui.fragment.qr.component.CameraNavigationButtonLayout
 import com.example.quickresponsecode.util.AppUtil.getCameraProvider
+import com.example.quickresponsecode.util.NavigationUtil.safeNavigate
 import com.example.quickresponsecode.util.PermissionUtil
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.concurrent.atomic.AtomicBoolean
 
 @AndroidEntryPoint
-class HomeFragment : CoreFragment() {
+class QrScanFragment : CoreFragment() {
 
-    private val viewModel: HomeViewModel by viewModels()
+    private val viewModel: QrViewModel by viewModels()
     private lateinit var cameraPermissionObserver: CameraPermissionLifecycleObserver
+    private var hasApplicationNavigateNextScreen = AtomicBoolean(false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupObserverCameraPermission()
         requestCameraPermission()
-
     }
 
     /*************************************************
@@ -116,6 +122,7 @@ class HomeFragment : CoreFragment() {
     override fun onResume() {
         super.onResume()
         viewModel.checkInternetConnection()
+        hasApplicationNavigateNextScreen.set(false)
     }
 
     @Composable
@@ -126,19 +133,34 @@ class HomeFragment : CoreFragment() {
 
 
         HomeLayout(
-            isInternetConnected = viewModel.isInternetConnected.collectAsState().value,
-            showToast = viewModel.showToast.collectAsState().value,
+            isInternetConnected = viewModel.isInternetConnected.collectAsStateWithLifecycle().value,
+            showToast = viewModel.showToast.collectAsStateWithLifecycle().value,
             chosenButton = chosenButton,
-            onClickCameraNavigationButton = {
-                chosenButton = it
+            onClickCameraNavigationButton = { navigationButton: CameraNavigationButton ->
+                chosenButton = navigationButton
+
+                when (navigationButton) {
+                    CameraNavigationButton.Scan -> {}
+                    CameraNavigationButton.Generate -> showToast("Generate")
+                    CameraNavigationButton.Import -> showToast("Import")
+                }
             },
             onReturnImageProxy = { imageProxy: ImageProxy ->
-                viewModel.processImage(imageProxy = imageProxy)
+                viewModel
+                    .processImage(
+                        imageProxy = imageProxy,
+                        gotoNextScreen = {
+                            if (hasApplicationNavigateNextScreen.getAndSet(true)) return@processImage
+
+                            safeNavigate(destination = R.id.toQrRead)
+                        }
+                    )
             },
             onOpenWifiSettings = {
                 val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
                 settingLauncher.launch(intent)
-            }
+            },
+            onOpenHistory = { showToast("History") }
         )
     }
 }
@@ -148,9 +170,12 @@ fun HomeLayout(
     isInternetConnected: Boolean = true,
     showToast: Boolean = true,
     chosenButton: CameraNavigationButton = CameraNavigationButton.Scan,
+
     onClickCameraNavigationButton: (CameraNavigationButton) -> Unit = {},
     onReturnImageProxy: (ImageProxy) -> Unit = {},
     onOpenWifiSettings: () -> Unit = {},
+
+    onOpenHistory: () -> Unit = {},
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -234,6 +259,48 @@ fun HomeLayout(
                         factory = { previewView },
                         modifier = Modifier
                             .fillMaxSize()
+                    )
+                }
+
+                // HISTORY BUTTON AND FLASHLIGHT
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp, horizontal = 16.dp)
+                        .align(BiasAlignment(horizontalBias = 0F, verticalBias = -1F))
+                        .systemBarsPadding()
+                ) {
+                    IconButton(
+                        onClick = onOpenHistory,
+                        content = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_history),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        modifier = Modifier
+                            .clip(shape = CircleShape)
+                            .background(color = Color.Black.copy(alpha = 0.4F))
+                    )
+
+                    IconButton(
+                        onClick = { enableFlashlight = !enableFlashlight },
+                        content = {
+                            Icon(
+                                painter =
+                                if (enableFlashlight) painterResource(id = R.drawable.ic_flash_on)
+                                else painterResource(id = R.drawable.ic_flash_off),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        modifier = Modifier
+                            .clip(shape = CircleShape)
+                            .background(color = Color.Black.copy(alpha = 0.4F))
                     )
                 }
 

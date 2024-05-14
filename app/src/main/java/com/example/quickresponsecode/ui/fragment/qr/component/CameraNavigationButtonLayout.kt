@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.home.component
+package com.example.quickresponsecode.ui.fragment.qr.component
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes

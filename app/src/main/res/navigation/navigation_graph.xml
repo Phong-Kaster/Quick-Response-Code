@@ -1,11 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:startDestination="@id/homeFragment"
+    app:startDestination="@id/qrScanFragment"
     android:id="@+id/navigation_graph.xml">
 
     <fragment
-        android:id="@+id/homeFragment"
-        android:name="com.example.quickresponsecode.ui.fragment.home.HomeFragment" />
+        android:id="@+id/qrScanFragment"
+        android:name="com.example.quickresponsecode.ui.fragment.qr.QrScanFragment" />
+
+    <fragment
+        android:id="@+id/qrReadFragment"
+        android:name="com.example.quickresponsecode.ui.fragment.qr.QrReadFragment" />
+
+    <action
+        android:id="@+id/toQrRead"
+        app:destination="@id/qrReadFragment"
+        app:enterAnim="@anim/enter_slide_in_right"
+        app:exitAnim="@anim/exit_slide_out_left"
+        app:popEnterAnim="@anim/enter_slide_in_left"
+        app:popExitAnim="@anim/exit_slide_out_right"
+        app:popUpToInclusive="true"/>
 
 </navigation>

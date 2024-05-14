@@ -15,4 +15,8 @@
     <string name="the_qr_code_scanned_is_invalid">The QR code scanned is invalid !</string>
     <string name="connect">Connect</string>
     <string name="turn_on_wi_fi_for_effective_use">Turn on Wi-Fi for effective use</string>
+    <string name="result">Result</string>
+    <string name="name">Name</string>
+    <string name="password">Password</string>
+    <string name="share_with_my_community">Share with my community</string>
 </resources>

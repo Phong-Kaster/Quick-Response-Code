@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.home
+package com.example.quickresponsecode.ui.fragment.qr
 
 import android.util.Log
 import androidx.camera.core.ImageProxy
@@ -13,7 +13,6 @@ import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,7 +21,7 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class HomeViewModel
+class QrViewModel
 @Inject
 constructor(
     private val context: QuickResponseCodeApplication
@@ -50,13 +49,14 @@ constructor(
     }
 
     fun checkInternetConnection() {
-        viewModelScope.launch(Dispatchers.IO){
+        viewModelScope.launch(Dispatchers.IO) {
             _isInternetConnected.value = AppUtil.isInternetConnected(context)
         }
     }
 
     fun processImage(
         imageProxy: ImageProxy?,
+        gotoNextScreen: () -> Unit = {},
     ) {
         Log.d("SCANNER", "----------------------")
         if (imageProxy == null) {
@@ -83,19 +83,21 @@ constructor(
                 for (barcode in barcodes) {
                     val bounds = barcode.boundingBox
                     val corners = barcode.cornerPoints
-
                     val rawValue = barcode.rawValue
 
                     val valueType: Int = barcode.valueType
 
 
-                    _qrCodeResult.value = ScannerUtil.getQuickResponseCodeResult(
-                        barcode = barcode,
-                        valueType = valueType
-                    )
-                    Log.d("SCANNER", "processImage - qrCodeResult.value: ${_qrCodeResult.value}")
-                    _showToast.value = if (_qrCodeResult.value.isNullOrEmpty()) true else false
-                    imageProxy.close()
+                    _qrCodeResult.value = ScannerUtil.getQuickResponseCodeResult(barcode = barcode, valueType = valueType)
+
+                    if (_qrCodeResult.value.isNullOrEmpty()) {
+                        _showToast.value = true
+                        imageProxy.close()
+                    } else {
+                        _showToast.value = false
+                        imageProxy.close()
+                        gotoNextScreen()
+                    }
                 }
             }
             .addOnFailureListener { exception: Exception ->
@@ -104,6 +106,4 @@ constructor(
                 exception.printStackTrace()
             }
     }
-
-
 }
