@@ -99,6 +99,9 @@ dependencies {
 
     // Scan barcodes with ML Kit on Android - https://developers.google.com/ml-kit/vision/barcode-scanning/android#kotlin
     implementation(libs.barcode.scanning)
+
+    // Consume flows safely in Jetpack Compose - https://medium.com/androiddevelopers/consuming-flows-safely-in-jetpack-compose-cde014d0d5a3
+    implementation(libs.androidx.lifecycle.runtime.compose)
 }
 
 // Dependency injection with Hilt - Allow references to generated code

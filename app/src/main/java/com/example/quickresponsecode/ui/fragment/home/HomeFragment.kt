@@ -1,9 +1,12 @@
 package com.example.quickresponsecode.ui.fragment.home
 
+import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.util.Size
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -23,15 +26,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -76,6 +76,7 @@ class HomeFragment : CoreFragment() {
         super.onViewCreated(view, savedInstanceState)
         setupObserverCameraPermission()
         requestCameraPermission()
+
     }
 
     /*************************************************
@@ -107,23 +108,36 @@ class HomeFragment : CoreFragment() {
         cameraPermissionObserver.launcher.launch(android.Manifest.permission.CAMERA)
     }
 
+    private val settingLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+
+        }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.checkInternetConnection()
+    }
+
     @Composable
     override fun ComposeView() {
         super.ComposeView()
-
         var chosenButton by remember { mutableStateOf(CameraNavigationButton.Scan) }
 
+
+
         HomeLayout(
+            isInternetConnected = viewModel.isInternetConnected.collectAsState().value,
             showToast = viewModel.showToast.collectAsState().value,
             chosenButton = chosenButton,
             onClickCameraNavigationButton = {
                 chosenButton = it
             },
             onReturnImageProxy = { imageProxy: ImageProxy ->
-                Log.d("SCANNER", "ComposeView - run process image ")
-                viewModel.processImage(
-                    imageProxy = imageProxy,
-                )
+                viewModel.processImage(imageProxy = imageProxy)
+            },
+            onOpenWifiSettings = {
+                val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
+                settingLauncher.launch(intent)
             }
         )
     }
@@ -131,10 +145,12 @@ class HomeFragment : CoreFragment() {
 
 @Composable
 fun HomeLayout(
+    isInternetConnected: Boolean = true,
     showToast: Boolean = true,
     chosenButton: CameraNavigationButton = CameraNavigationButton.Scan,
     onClickCameraNavigationButton: (CameraNavigationButton) -> Unit = {},
     onReturnImageProxy: (ImageProxy) -> Unit = {},
+    onOpenWifiSettings: () -> Unit = {},
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -238,6 +254,8 @@ fun HomeLayout(
                         .padding(top = 0.dp, bottom = 20.dp, start = 10.dp, end = 10.dp)
                         .align(Alignment.BottomCenter)
                 ) {
+
+                    // The QR code scanned is invalid
                     AnimatedVisibility(
                         visible = showToast,
                         content = {
@@ -257,7 +275,7 @@ fun HomeLayout(
                                 )
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
-                                    text = stringResource(R.string.the_qr_code_scanned_is_invalid_please_give_it_another_try),
+                                    text = stringResource(R.string.the_qr_code_scanned_is_invalid),
                                     color = Color(0xFF333333),
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
@@ -274,6 +292,48 @@ fun HomeLayout(
                                     paddingHorizontal = 10.dp,
                                     onClick = {}
                                 )*/
+                            }
+                        }
+                    )
+
+                    AnimatedVisibility(
+                        visible = isInternetConnected == false,
+                        content = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(shape = RoundedCornerShape(50.dp))
+                                    .background(color = Color(0xFFFDF6E9))
+                                    .padding(vertical = 16.dp, horizontal = 16.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_warning),
+                                    contentDescription = null,
+                                    tint = Color(0xFFEEA720),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = stringResource(R.string.turn_on_wi_fi_for_effective_use),
+                                    color = Color(0xFF333333),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(0.7F)
+                                )
+                                OutlineButton(
+                                    text = stringResource(id = R.string.connect),
+                                    textColor = Color(0xFFF1B94D),
+                                    borderStroke = BorderStroke(
+                                        width = 1.dp,
+                                        color = Color(0xFFF1B94D)
+                                    ),
+                                    marginHorizontal = 0.dp,
+                                    marginVertical = 0.dp,
+                                    paddingVertical = 5.dp,
+                                    paddingHorizontal = 10.dp,
+                                    onClick = onOpenWifiSettings
+                                )
                             }
                         }
                     )

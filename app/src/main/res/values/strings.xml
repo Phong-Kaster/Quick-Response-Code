@@ -12,6 +12,7 @@
     <string name="scan">Scan</string>
     <string name="generate">Generate</string>
     <string name="import_lowercase">Import</string>
-    <string name="the_qr_code_scanned_is_invalid_please_give_it_another_try">The QR code scanned is invalid. Please give it another try!</string>
+    <string name="the_qr_code_scanned_is_invalid">The QR code scanned is invalid !</string>
     <string name="connect">Connect</string>
+    <string name="turn_on_wi_fi_for_effective_use">Turn on Wi-Fi for effective use</string>
 </resources>
