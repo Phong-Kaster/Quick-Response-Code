@@ -57,6 +57,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.flashlightenhancedversion.lifecycleobserver.CameraPermissionLifecycleObserver
@@ -149,10 +150,15 @@ class QrScanFragment : CoreFragment() {
                 viewModel
                     .processImage(
                         imageProxy = imageProxy,
-                        gotoNextScreen = {
+                        gotoNextScreen = { wifiSSID, wifiPassword, wifiType ->
+                            Log.d("PHONG", "ComposeView - WifiName: $wifiSSID - WifiPassword: $wifiPassword - Wifi Type: $wifiType ")
+
                             if (hasApplicationNavigateNextScreen.getAndSet(true)) return@processImage
 
-                            safeNavigate(destination = R.id.toQrRead)
+                            safeNavigate(
+                                destination = R.id.toQrRead,
+                                bundle = bundleOf("wifiSSID" to wifiSSID, "wifiPassword" to wifiPassword, "wifiType" to wifiType)
+                            )
                         }
                     )
             },

@@ -19,6 +19,6 @@
         app:exitAnim="@anim/exit_slide_out_left"
         app:popEnterAnim="@anim/enter_slide_in_left"
         app:popExitAnim="@anim/exit_slide_out_right"
-        app:popUpToInclusive="true"/>
+        app:popUpToInclusive="true" />
 
 </navigation>

@@ -5,8 +5,10 @@ import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.quickresponsecode.QuickResponseCodeApplication
+import com.example.quickresponsecode.configuration.WifiSSID
+import com.example.quickresponsecode.configuration.WifiPassword
+import com.example.quickresponsecode.configuration.WifiType
 import com.example.quickresponsecode.util.AppUtil
-import com.example.quickresponsecode.util.ScannerUtil
 import com.example.quickresponsecode.util.ScannerUtil.toInputImage
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
@@ -56,7 +58,7 @@ constructor(
 
     fun processImage(
         imageProxy: ImageProxy?,
-        gotoNextScreen: () -> Unit = {},
+        gotoNextScreen: (WifiSSID, WifiPassword, WifiType) -> Unit = { _, _, _ -> },
     ) {
         Log.d("SCANNER", "----------------------")
         if (imageProxy == null) {
@@ -88,15 +90,25 @@ constructor(
                     val valueType: Int = barcode.valueType
 
 
-                    _qrCodeResult.value = ScannerUtil.getQuickResponseCodeResult(barcode = barcode, valueType = valueType)
 
-                    if (_qrCodeResult.value.isNullOrEmpty()) {
-                        _showToast.value = true
-                        imageProxy.close()
-                    } else {
+                    if (valueType == Barcode.TYPE_WIFI) {
+                        val ssid = barcode.wifi!!.ssid
+                        val password = barcode.wifi!!.password
+                        val type = barcode.wifi!!.encryptionType
+
+
+                        Log.d("SCANNER", "Barcode.TYPE_WIFI")
+                        Log.d("SCANNER", "ssid: ${ssid}")
+                        Log.d("SCANNER", "password: ${password}")
+                        Log.d("SCANNER", "type: ${type}")
+
                         _showToast.value = false
                         imageProxy.close()
-                        gotoNextScreen()
+                        gotoNextScreen(ssid ?: "", password ?: "", type)
+                    } else {
+                        Log.d("SCANNER", "Barcode.TYPE_NOT_VALID")
+                        _showToast.value = true
+                        imageProxy.close()
                     }
                 }
             }
