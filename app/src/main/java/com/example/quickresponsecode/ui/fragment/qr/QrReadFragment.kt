@@ -1,6 +1,7 @@
 package com.example.quickresponsecode.ui.fragment.qr
 
 import android.app.Activity.RESULT_OK
+import android.content.Context
 import android.content.Intent
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiNetworkSuggestion
@@ -22,6 +23,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -54,6 +57,7 @@ import com.example.quickresponsecode.R
 import com.example.quickresponsecode.ui.component.CoreTopBar2
 import com.example.quickresponsecode.ui.component.OutlineButton
 import com.example.quickresponsecode.ui.component.SolidButton
+import com.example.quickresponsecode.util.AppUtil
 import com.example.quickresponsecode.util.NavigationUtil.safeNavigateUp
 import com.example.quickresponsecode.util.WifiUtil
 import dagger.hilt.android.AndroidEntryPoint
@@ -69,8 +73,12 @@ class QrReadFragment : CoreFragment() {
     private var password: String? by mutableStateOf(null)
     private var type: Int? by mutableStateOf(null)
 
+    private lateinit var wifiManager: WifiManager
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        wifiManager = requireContext().getSystemService(Context.WIFI_SERVICE) as WifiManager
         getWifiInfo()
     }
 
@@ -90,13 +98,27 @@ class QrReadFragment : CoreFragment() {
             return
         }
 
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { /** From Android 11 and higher */
-            connectWifiOnAndroid11AndAbove(ssid = ssid, password = password)
-        } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) { /** For Android 10 only*/
-            WifiUtil.connectWifiOnAndroid10(context = requireContext(), ssid = ssid, password = password)
-        } else { /** From Android 9 and below */
-            WifiUtil.connectWifiOnAndroid9AndBelow(context = requireContext(), ssid = ssid, password = password)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            /** From Android 11 and higher */
+            connectWifiOnAndroid11AndAbove(
+                ssid = ssid,
+                password = password
+            )
+            /*connectToWifi(ssid, password)*/
+        } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+            /** For Android 10 only*/
+            WifiUtil.connectWifiOnAndroid10(
+                context = requireContext(),
+                ssid = ssid,
+                password = password
+            )
+        } else {
+            /** From Android 9 and below */
+            WifiUtil.connectWifiOnAndroid9AndBelow(
+                context = requireContext(),
+                ssid = ssid,
+                password = password
+            )
         }
     }
 
@@ -106,37 +128,45 @@ class QrReadFragment : CoreFragment() {
     @RequiresApi(Build.VERSION_CODES.R)
     private val settingLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val resultCode = result.resultCode
-            if (resultCode == RESULT_OK) {
-                // user agreed to save configurations: still need to check individual results
-                if (result.data != null && result.data!!.hasExtra(EXTRA_WIFI_NETWORK_RESULT_LIST)) {
-                    for (code in result.data!!.getIntegerArrayListExtra(EXTRA_WIFI_NETWORK_RESULT_LIST)!!) {
-                        when (code) {
-                            ADD_WIFI_RESULT_SUCCESS -> {
-                                // Configuration saved or modified
-                                showToast("ADD_WIFI_RESULT_SUCCESS")
-                            }
+            try {
+                val resultCode = result.resultCode
+                if (resultCode == RESULT_OK) {
+                    // user agreed to save configurations: still need to check individual results
+                    if (result.data != null && result.data!!.hasExtra(EXTRA_WIFI_NETWORK_RESULT_LIST)) {
+                        for (code in result.data!!.getIntegerArrayListExtra(
+                            EXTRA_WIFI_NETWORK_RESULT_LIST
+                        )!!) {
+                            when (code) {
+                                ADD_WIFI_RESULT_SUCCESS -> {
+                                    // Configuration saved or modified
+                                    showToast("ADD_WIFI_RESULT_SUCCESS")
+                                }
 
-                            ADD_WIFI_RESULT_ADD_OR_UPDATE_FAILED -> {
-                                // Something went wrong - invalid configuration
-                                showToast("ADD_WIFI_RESULT_ADD_OR_UPDATE_FAILED")
-                            }
+                                ADD_WIFI_RESULT_ADD_OR_UPDATE_FAILED -> {
+                                    // Something went wrong - invalid configuration
+                                    showToast("ADD_WIFI_RESULT_ADD_OR_UPDATE_FAILED")
+                                }
 
-                            ADD_WIFI_RESULT_ALREADY_EXISTS -> {
-                                // Configuration existed (as-is) on device, nothing changed
-                                showToast("ADD_WIFI_RESULT_ALREADY_EXISTS")
-                            }
+                                ADD_WIFI_RESULT_ALREADY_EXISTS -> {
+                                    // Configuration existed (as-is) on device, nothing changed
+                                    showToast("ADD_WIFI_RESULT_ALREADY_EXISTS")
+                                }
 
-                            else -> showToast("Failed")
+                                else -> showToast("Failed")
+                            }
                         }
                     }
+                } else {
+                    // User refused to save configurations
+                    showToast("User refused to save configurations")
                 }
-            } else {
-                // User refused to save configurations
+            } catch (ex: Exception) {
+                ex.printStackTrace()
             }
         }
 
     private fun connectWifiOnAndroid11AndAbove(password: String, ssid: String) {
+        Log.d("PHONG", "connectWifiOnAndroid11AndAbove")
         /** Below Android 11 is not supported*/
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
 
@@ -164,7 +194,8 @@ class QrReadFragment : CoreFragment() {
             friendlyName = "Some Friendly Name"
         }
 
-        val passpointConfiguration = WifiNetworkSuggestion.Builder().setPasspointConfig(config).build()
+        val passpointConfiguration =
+            WifiNetworkSuggestion.Builder().setPasspointConfig(config).build()
 
         suggestions.add(passpointConfiguration)
         suggestions.add(wpa2Configuration)
@@ -174,11 +205,15 @@ class QrReadFragment : CoreFragment() {
         val bundle = Bundle()
         bundle.putParcelableArrayList(EXTRA_WIFI_NETWORK_LIST, suggestions)
         val intent = Intent(ACTION_WIFI_ADD_NETWORKS)
-        intent.putExtras(bundle)
+        intent.putExtra(EXTRA_WIFI_NETWORK_LIST, suggestions)
 
-        settingLauncher.launch(intent)
+        try {
+            settingLauncher.launch(intent)
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+            Log.d("PHONG", "connectWifiOnAndroid11AndAbove - exception: ${ex.message} ")
+        }
     }
-
 
     @Composable
     override fun ComposeView() {
@@ -187,10 +222,9 @@ class QrReadFragment : CoreFragment() {
             wifiSSID = ssid ?: "",
             wifiPassword = password ?: "",
             onBack = { safeNavigateUp() },
-            onConnect = {
-                connectWifi(ssid = ssid, password = password)
-            },
-            onShare = { showToast(requireContext().getString(R.string.share_with_my_community)) }
+            onConnect = { connectWifi(ssid = ssid, password = password) },
+            onShare = { showToast(requireContext().getString(R.string.share_with_my_community)) },
+            onCopyToClipboard = { AppUtil.copyToClipboard(context = requireContext(), text = password ?: "") }
         )
     }
 }
@@ -203,6 +237,7 @@ fun QrReadLayout(
     onBack: () -> Unit = {},
     onConnect: () -> Unit = {},
     onShare: () -> Unit = {},
+    onCopyToClipboard: () -> Unit = {}
 ) {
     CoreLayout(
         topBar = {
@@ -291,14 +326,29 @@ fun QrReadLayout(
                             )
                         )
 
-                        Text(
-                            text = wifiPassword,
-                            style = TextStyle(
-                                color = Color(0xFF333333),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight(500)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                        ) {
+                            Text(
+                                text = wifiPassword,
+                                style = TextStyle(
+                                    color = Color(0xFF333333),
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight(500)
+                                )
                             )
-                        )
+
+
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_copy_to_clipboard),
+                                contentDescription = null,
+                                tint = Color(0xFF6B6B6B),
+                                modifier = Modifier
+                                    .clip(shape = RoundedCornerShape(15.dp))
+                                    .clickable { onCopyToClipboard() }
+                            )
+                        }
                     }
                 }
 

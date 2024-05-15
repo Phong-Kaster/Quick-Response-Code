@@ -70,6 +70,7 @@ import com.example.quickresponsecode.ui.fragment.qr.component.CameraNavigationBu
 import com.example.quickresponsecode.util.AppUtil.getCameraProvider
 import com.example.quickresponsecode.util.NavigationUtil.safeNavigate
 import com.example.quickresponsecode.util.PermissionUtil
+import com.example.quickresponsecode.util.SoundUtil
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -151,14 +152,10 @@ class QrScanFragment : CoreFragment() {
                     .processImage(
                         imageProxy = imageProxy,
                         gotoNextScreen = { wifiSSID, wifiPassword, wifiType ->
-                            Log.d("PHONG", "ComposeView - WifiName: $wifiSSID - WifiPassword: $wifiPassword - Wifi Type: $wifiType ")
-
                             if (hasApplicationNavigateNextScreen.getAndSet(true)) return@processImage
 
-                            safeNavigate(
-                                destination = R.id.toQrRead,
-                                bundle = bundleOf("wifiSSID" to wifiSSID, "wifiPassword" to wifiPassword, "wifiType" to wifiType)
-                            )
+                            SoundUtil.vibrateAndRing(context = requireContext())
+                            safeNavigate(destination = R.id.toQrRead, bundle = bundleOf("wifiSSID" to wifiSSID, "wifiPassword" to wifiPassword, "wifiType" to wifiType))
                         }
                     )
             },

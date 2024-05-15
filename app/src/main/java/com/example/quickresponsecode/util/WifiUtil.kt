@@ -16,12 +16,12 @@ import com.example.quickresponsecode.R
 object WifiUtil {
 
     /**********************************************
-     *  Only work on Android 10 */
+     *  Only work on Android 10
+     */
     fun connectWifiOnAndroid10(
         context: Context,
         password: String,
         ssid: String,
-        onFailed: () -> Unit = {}
     ) {
         if (Build.VERSION.SDK_INT != Build.VERSION_CODES.Q) return
 

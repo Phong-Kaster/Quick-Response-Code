@@ -13,14 +13,14 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
 
-    <!-- LOCATION -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <!-- CAMERA -->
     <!-- If you use android.hardware.camera without .any, it will not work if you have a device without a back camera, such as most Chromebooks. The second line adds the permission to access that camera. -->
     <uses-feature android:name="android.hardware.camera.any" />
     <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- VIBRATE -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:name=".QuickResponseCodeApplication"
@@ -33,6 +33,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.QuickResponseCode"
         tools:targetApi="31">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -43,6 +44,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+
     </application>
 
 </manifest>
