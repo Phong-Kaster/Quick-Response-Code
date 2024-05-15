@@ -19,4 +19,5 @@
     <string name="name">Name</string>
     <string name="password">Password</string>
     <string name="share_with_my_community">Share with my community</string>
+    <string name="please_connect_wifi_manually">Please, connect Wifi manually</string>
 </resources>

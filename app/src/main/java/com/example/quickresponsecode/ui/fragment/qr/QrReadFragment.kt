@@ -1,16 +1,23 @@
 package com.example.quickresponsecode.ui.fragment.qr
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
+import android.app.Activity.RESULT_OK
+import android.content.Intent
 import android.net.wifi.WifiManager
-import android.net.wifi.WifiNetworkSpecifier
+import android.net.wifi.WifiNetworkSuggestion
+import android.net.wifi.hotspot2.PasspointConfiguration
+import android.net.wifi.hotspot2.pps.Credential
+import android.net.wifi.hotspot2.pps.HomeSp
 import android.os.Build
 import android.os.Bundle
-import android.os.PatternMatcher
+import android.provider.Settings.ACTION_WIFI_ADD_NETWORKS
+import android.provider.Settings.ADD_WIFI_RESULT_ADD_OR_UPDATE_FAILED
+import android.provider.Settings.ADD_WIFI_RESULT_ALREADY_EXISTS
+import android.provider.Settings.ADD_WIFI_RESULT_SUCCESS
+import android.provider.Settings.EXTRA_WIFI_NETWORK_LIST
+import android.provider.Settings.EXTRA_WIFI_NETWORK_RESULT_LIST
+import android.util.Log
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -48,10 +55,12 @@ import com.example.quickresponsecode.ui.component.CoreTopBar2
 import com.example.quickresponsecode.ui.component.OutlineButton
 import com.example.quickresponsecode.ui.component.SolidButton
 import com.example.quickresponsecode.util.NavigationUtil.safeNavigateUp
+import com.example.quickresponsecode.util.WifiUtil
 import dagger.hilt.android.AndroidEntryPoint
 
+
 /**
- * https://icircuit.net/android-connecting-wifi-programmatically/1814
+ * Save networks and Passpoint configurations - https://developer.android.com/develop/connectivity/wifi/wifi-save-network-passpoint-config
  */
 @AndroidEntryPoint
 class QrReadFragment : CoreFragment() {
@@ -72,47 +81,104 @@ class QrReadFragment : CoreFragment() {
     }
 
 
-    @RequiresApi(Build.VERSION_CODES.Q)
-    fun connectWifi(password: String?, ssid:String?) {
+    private fun connectWifi(password: String?, ssid: String?) {
+        Log.d("PHONG", "-----------------------")
+        Log.d("PHONG", "connectWifi with ssid $ssid and password $password")
+
         if (password.isNullOrEmpty() || ssid.isNullOrEmpty()) {
+            showToast("Password or SSID is empty !")
             return
         }
 
-        val wifiManager =  requireContext().getSystemService(Context.WIFI_SERVICE)
 
-        val connectivityManager =
-            requireContext().getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { /** From Android 11 and higher */
+            connectWifiOnAndroid11AndAbove(ssid = ssid, password = password)
+        } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) { /** For Android 10 only*/
+            WifiUtil.connectWifiOnAndroid10(context = requireContext(), ssid = ssid, password = password)
+        } else { /** From Android 9 and below */
+            WifiUtil.connectWifiOnAndroid9AndBelow(context = requireContext(), ssid = ssid, password = password)
+        }
+    }
 
-        val wifiSpecifier = WifiNetworkSpecifier.Builder()
-            .setSsid(ssid)
-            .setWpa2Passphrase(password)
-            .setSsidPattern(PatternMatcher(ssid, PatternMatcher.PATTERN_PREFIX))
-            .build()
+    /**
+     * Save networks and Passpoint configurations - https://developer.android.com/develop/connectivity/wifi/wifi-save-network-passpoint-config
+     */
+    @RequiresApi(Build.VERSION_CODES.R)
+    private val settingLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val resultCode = result.resultCode
+            if (resultCode == RESULT_OK) {
+                // user agreed to save configurations: still need to check individual results
+                if (result.data != null && result.data!!.hasExtra(EXTRA_WIFI_NETWORK_RESULT_LIST)) {
+                    for (code in result.data!!.getIntegerArrayListExtra(EXTRA_WIFI_NETWORK_RESULT_LIST)!!) {
+                        when (code) {
+                            ADD_WIFI_RESULT_SUCCESS -> {
+                                // Configuration saved or modified
+                                showToast("ADD_WIFI_RESULT_SUCCESS")
+                            }
 
-        val networkRequest = NetworkRequest.Builder()
-            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-            .removeCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .setNetworkSpecifier(wifiSpecifier)
-            .build()
+                            ADD_WIFI_RESULT_ADD_OR_UPDATE_FAILED -> {
+                                // Something went wrong - invalid configuration
+                                showToast("ADD_WIFI_RESULT_ADD_OR_UPDATE_FAILED")
+                            }
 
-        val networkCallback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                super.onAvailable(network)
-                showToast("onAvailable")
-            }
+                            ADD_WIFI_RESULT_ALREADY_EXISTS -> {
+                                // Configuration existed (as-is) on device, nothing changed
+                                showToast("ADD_WIFI_RESULT_ALREADY_EXISTS")
+                            }
 
-            override fun onUnavailable() {
-                super.onUnavailable()
-                showToast("onUnavailable")
-            }
-
-            override fun onLost(network: Network) {
-                super.onLost(network)
-                showToast("onLost")
+                            else -> showToast("Failed")
+                        }
+                    }
+                }
+            } else {
+                // User refused to save configurations
             }
         }
-        connectivityManager.requestNetwork(networkRequest, networkCallback)
+
+    private fun connectWifiOnAndroid11AndAbove(password: String, ssid: String) {
+        /** Below Android 11 is not supported*/
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+
+        /** There are 3 ways to configure & connect Wifi automatically*/
+        val suggestions = ArrayList<WifiNetworkSuggestion>()
+
+        /** 1. WPA2 configuration */
+        val wpa2Configuration =
+            WifiNetworkSuggestion.Builder().setSsid(ssid).setWpa2Passphrase(password).build()
+
+        /** 2. Open configuration */
+        val openConfiguration = WifiNetworkSuggestion.Builder().setSsid(ssid).build()
+
+        /** 3. Passpoint configuration*/
+        val config = PasspointConfiguration()
+        config.credential = Credential().apply {
+            realm = "realm.example.com"
+            simCredential = Credential.SimCredential().apply {
+                eapType = 18
+                imsi = "123456*"
+            }
+        }
+        config.homeSp = HomeSp().apply {
+            fqdn = "test1.example.com"
+            friendlyName = "Some Friendly Name"
+        }
+
+        val passpointConfiguration = WifiNetworkSuggestion.Builder().setPasspointConfig(config).build()
+
+        suggestions.add(passpointConfiguration)
+        suggestions.add(wpa2Configuration)
+        suggestions.add(openConfiguration)
+
+        /** Create intent*/
+        val bundle = Bundle()
+        bundle.putParcelableArrayList(EXTRA_WIFI_NETWORK_LIST, suggestions)
+        val intent = Intent(ACTION_WIFI_ADD_NETWORKS)
+        intent.putExtras(bundle)
+
+        settingLauncher.launch(intent)
     }
+
 
     @Composable
     override fun ComposeView() {
@@ -122,7 +188,7 @@ class QrReadFragment : CoreFragment() {
             wifiPassword = password ?: "",
             onBack = { safeNavigateUp() },
             onConnect = {
-                connectWifi(ssid, password)
+                connectWifi(ssid = ssid, password = password)
             },
             onShare = { showToast(requireContext().getString(R.string.share_with_my_community)) }
         )
