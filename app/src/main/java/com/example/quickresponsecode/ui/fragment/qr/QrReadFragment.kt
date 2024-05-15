@@ -65,6 +65,8 @@ import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Save networks and Passpoint configurations - https://developer.android.com/develop/connectivity/wifi/wifi-save-network-passpoint-config
+ *
+ * Issue: Crash happens on Realme 9i (Android 13) that have no solution
  */
 @AndroidEntryPoint
 class QrReadFragment : CoreFragment() {
@@ -90,9 +92,6 @@ class QrReadFragment : CoreFragment() {
 
 
     private fun connectWifi(password: String?, ssid: String?) {
-        Log.d("PHONG", "-----------------------")
-        Log.d("PHONG", "connectWifi with ssid $ssid and password $password")
-
         if (password.isNullOrEmpty() || ssid.isNullOrEmpty()) {
             showToast("Password or SSID is empty !")
             return
@@ -166,7 +165,6 @@ class QrReadFragment : CoreFragment() {
         }
 
     private fun connectWifiOnAndroid11AndAbove(password: String, ssid: String) {
-        Log.d("PHONG", "connectWifiOnAndroid11AndAbove")
         /** Below Android 11 is not supported*/
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
 
@@ -236,6 +234,7 @@ fun QrReadLayout(
 
     onBack: () -> Unit = {},
     onConnect: () -> Unit = {},
+
     onShare: () -> Unit = {},
     onCopyToClipboard: () -> Unit = {}
 ) {

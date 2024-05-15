@@ -3,9 +3,9 @@ package com.example.quickresponsecode.ui.fragment.qr
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.util.Size
 import android.view.View
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -18,7 +18,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,16 +63,24 @@ import com.example.flashlightenhancedversion.lifecycleobserver.CameraPermissionL
 import com.example.jetpack.core.CoreFragment
 import com.example.jetpack.core.CoreLayout
 import com.example.quickresponsecode.R
+import com.example.quickresponsecode.configuration.WifiPassword
+import com.example.quickresponsecode.configuration.WifiSSID
+import com.example.quickresponsecode.configuration.WifiType
 import com.example.quickresponsecode.data.enums.CameraNavigationButton
 import com.example.quickresponsecode.ui.component.OutlineButton
 import com.example.quickresponsecode.ui.fragment.qr.component.CameraNavigationButtonLayout
+import com.example.quickresponsecode.ui.fragment.qr.component.QrTopbar
 import com.example.quickresponsecode.util.AppUtil.getCameraProvider
 import com.example.quickresponsecode.util.NavigationUtil.safeNavigate
 import com.example.quickresponsecode.util.PermissionUtil
 import com.example.quickresponsecode.util.SoundUtil
+import com.google.mlkit.vision.common.InputImage
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * [Scan barcodes with ML Kit on Android](https://developers.google.com/ml-kit/vision/barcode-scanning/android#kotlin)
+ */
 @AndroidEntryPoint
 class QrScanFragment : CoreFragment() {
 
@@ -121,6 +128,49 @@ class QrScanFragment : CoreFragment() {
 
         }
 
+    /*************************************************
+     * for picking photo from gallery
+     */
+    private fun pickPhotoFromGallery() {
+        val pickImageOnlyRequest = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        galleryLauncher.launch(pickImageOnlyRequest)
+    }
+
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            run {
+                if (uri == null) return@registerForActivityResult
+
+                var inputImage: InputImage? = null
+                try {
+                    inputImage = InputImage.fromFilePath(requireContext(), uri)
+                } catch (ex: Exception) {
+                    ex.printStackTrace()
+                    return@registerForActivityResult
+                }
+
+                viewModel.processPhotoFromGallery(
+                    inputImage = inputImage,
+                    gotoNextScreen = { wifiSSID, wifiPassword, wifiType -> gotoNextScreen(wifiSSID = wifiSSID, wifiPassword = wifiPassword, wifiType = wifiType) }
+                )
+            }
+        }
+
+
+
+    private fun gotoNextScreen(wifiSSID: WifiSSID, wifiPassword: WifiPassword, wifiType: WifiType) {
+        if (hasApplicationNavigateNextScreen.getAndSet(true)) return
+
+        SoundUtil.vibrateAndRing(context = requireContext())
+        safeNavigate(
+            destination = R.id.toQrRead,
+            bundle = bundleOf(
+                "wifiSSID" to wifiSSID,
+                "wifiPassword" to wifiPassword,
+                "wifiType" to wifiType
+            )
+        )
+    }
+
     override fun onResume() {
         super.onResume()
         viewModel.checkInternetConnection()
@@ -133,7 +183,6 @@ class QrScanFragment : CoreFragment() {
         var chosenButton by remember { mutableStateOf(CameraNavigationButton.Scan) }
 
 
-
         HomeLayout(
             isInternetConnected = viewModel.isInternetConnected.collectAsStateWithLifecycle().value,
             showToast = viewModel.showToast.collectAsStateWithLifecycle().value,
@@ -144,19 +193,14 @@ class QrScanFragment : CoreFragment() {
                 when (navigationButton) {
                     CameraNavigationButton.Scan -> {}
                     CameraNavigationButton.Generate -> showToast("Generate")
-                    CameraNavigationButton.Import -> showToast("Import")
+                    CameraNavigationButton.Import -> pickPhotoFromGallery()
                 }
             },
             onReturnImageProxy = { imageProxy: ImageProxy ->
                 viewModel
-                    .processImage(
+                    .processPhoto(
                         imageProxy = imageProxy,
-                        gotoNextScreen = { wifiSSID, wifiPassword, wifiType ->
-                            if (hasApplicationNavigateNextScreen.getAndSet(true)) return@processImage
-
-                            SoundUtil.vibrateAndRing(context = requireContext())
-                            safeNavigate(destination = R.id.toQrRead, bundle = bundleOf("wifiSSID" to wifiSSID, "wifiPassword" to wifiPassword, "wifiType" to wifiType))
-                        }
+                        gotoNextScreen = { wifiSSID, wifiPassword, wifiType -> gotoNextScreen(wifiSSID = wifiSSID, wifiPassword = wifiPassword, wifiType = wifiType) }
                     )
             },
             onOpenWifiSettings = {
@@ -225,9 +269,11 @@ fun HomeLayout(
             val cameraProvider = context.getCameraProvider()
             val preview = androidx.camera.core.Preview.Builder().build()
 
-            imageAnalysis.setAnalyzer(executor, ImageAnalysis.Analyzer { imageProxy ->
+
+            val analyzer = ImageAnalysis.Analyzer { imageProxy ->
                 onReturnImageProxy(imageProxy)
-            })
+            }
+            imageAnalysis.setAnalyzer(executor, analyzer)
 
 
             cameraProvider.unbindAll()
@@ -266,46 +312,17 @@ fun HomeLayout(
                 }
 
                 // HISTORY BUTTON AND FLASHLIGHT
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                QrTopbar(
+                    enableFlashlight = enableFlashlight,
+                    onOpenHistory = onOpenHistory,
+                    onOpenFlashlight = { enableFlashlight = !enableFlashlight },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 16.dp, horizontal = 16.dp)
                         .align(BiasAlignment(horizontalBias = 0F, verticalBias = -1F))
                         .systemBarsPadding()
-                ) {
-                    IconButton(
-                        onClick = onOpenHistory,
-                        content = {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_history),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        },
-                        modifier = Modifier
-                            .clip(shape = CircleShape)
-                            .background(color = Color.Black.copy(alpha = 0.4F))
-                    )
+                )
 
-                    IconButton(
-                        onClick = { enableFlashlight = !enableFlashlight },
-                        content = {
-                            Icon(
-                                painter =
-                                if (enableFlashlight) painterResource(id = R.drawable.ic_flash_on)
-                                else painterResource(id = R.drawable.ic_flash_off),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        },
-                        modifier = Modifier
-                            .clip(shape = CircleShape)
-                            .background(color = Color.Black.copy(alpha = 0.4F))
-                    )
-                }
 
                 Image(
                     painter = painterResource(R.drawable.ic_scan_overlay),
@@ -366,8 +383,9 @@ fun HomeLayout(
                         }
                     )
 
+                    // No internet connection
                     AnimatedVisibility(
-                        visible = isInternetConnected == false,
+                        visible = !isInternetConnected,
                         content = {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -409,6 +427,7 @@ fun HomeLayout(
                     )
 
 
+                    // Camera Navigation Button
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,

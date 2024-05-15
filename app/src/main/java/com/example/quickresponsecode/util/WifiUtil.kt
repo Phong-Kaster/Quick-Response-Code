@@ -15,7 +15,7 @@ import com.example.quickresponsecode.R
 
 object WifiUtil {
 
-    /**********************************************
+    /*************************************************
      *  Only work on Android 10
      */
     fun connectWifiOnAndroid10(
@@ -53,7 +53,7 @@ object WifiUtil {
     }
 
 
-    /***********************************
+    /*************************************************
      * Connect to a WiFi network using Android 9 & Below.
      */
     fun connectWifiOnAndroid9AndBelow(context: Context, ssid: String, password: String) {
@@ -83,7 +83,7 @@ object WifiUtil {
         }
     }
 
-    /***********************************
+    /*************************************************
      * Use a full page activity - if Wifi is not available, user will be redirected to settings
      */
     private fun openWifiSetting(context: Context){

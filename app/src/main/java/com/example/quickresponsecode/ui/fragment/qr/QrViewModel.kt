@@ -1,5 +1,6 @@
 package com.example.quickresponsecode.ui.fragment.qr
 
+import android.net.Uri
 import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
@@ -14,6 +15,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,7 +58,7 @@ constructor(
         }
     }
 
-    fun processImage(
+    fun processPhoto(
         imageProxy: ImageProxy?,
         gotoNextScreen: (WifiSSID, WifiPassword, WifiType) -> Unit = { _, _, _ -> },
     ) {
@@ -118,4 +120,52 @@ constructor(
                 exception.printStackTrace()
             }
     }
+
+    fun processPhotoFromGallery(
+        inputImage: InputImage,
+        gotoNextScreen: (WifiSSID, WifiPassword, WifiType) -> Unit = { _, _, _ -> }
+    ) {
+        scanner
+            .process(inputImage)
+            .addOnSuccessListener { barcodes ->
+                if (barcodes.isEmpty()) {
+                    return@addOnSuccessListener
+                }
+
+                for (barcode in barcodes) {
+                    val bounds = barcode.boundingBox
+                    val corners = barcode.cornerPoints
+                    val rawValue = barcode.rawValue
+
+                    val valueType: Int = barcode.valueType
+
+
+
+                    if (valueType == Barcode.TYPE_WIFI) {
+                        val ssid = barcode.wifi!!.ssid
+                        val password = barcode.wifi!!.password
+                        val type = barcode.wifi!!.encryptionType
+
+
+                        Log.d("SCANNER", "Barcode.TYPE_WIFI")
+                        Log.d("SCANNER", "ssid: ${ssid}")
+                        Log.d("SCANNER", "password: ${password}")
+                        Log.d("SCANNER", "type: ${type}")
+
+                        _showToast.value = false
+
+                        gotoNextScreen(ssid ?: "", password ?: "", type)
+                    } else {
+                        Log.d("SCANNER", "Barcode.TYPE_NOT_VALID")
+                        _showToast.value = true
+
+                    }
+                }
+            }
+            .addOnFailureListener { exception: Exception ->
+                Log.d("SCANNER", "Home View Model - addOnFailureListener")
+                exception.printStackTrace()
+            }
+    }
+
 }
