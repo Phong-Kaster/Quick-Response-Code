@@ -6,15 +6,29 @@
 
     <fragment
         android:id="@+id/qrScanFragment"
-        android:name="com.example.quickresponsecode.ui.fragment.qr.QrScanFragment" />
+        android:name="com.example.quickresponsecode.ui.fragment.qrscan.QrScanFragment" />
 
     <fragment
         android:id="@+id/qrReadFragment"
-        android:name="com.example.quickresponsecode.ui.fragment.qr.QrReadFragment" />
+        android:name="com.example.quickresponsecode.ui.fragment.qrscan.QrReadFragment" />
+
+    <fragment
+        android:id="@+id/qrGenerateFragment"
+        android:name="com.example.quickresponsecode.ui.fragment.qrgenerate.QrGenerateFragment" />
+
 
     <action
         android:id="@+id/toQrRead"
         app:destination="@id/qrReadFragment"
+        app:enterAnim="@anim/enter_slide_in_right"
+        app:exitAnim="@anim/exit_slide_out_left"
+        app:popEnterAnim="@anim/enter_slide_in_left"
+        app:popExitAnim="@anim/exit_slide_out_right"
+        app:popUpToInclusive="true" />
+
+    <action
+        android:id="@+id/toQrGenerate"
+        app:destination="@id/qrGenerateFragment"
         app:enterAnim="@anim/enter_slide_in_right"
         app:exitAnim="@anim/exit_slide_out_left"
         app:popEnterAnim="@anim/enter_slide_in_left"

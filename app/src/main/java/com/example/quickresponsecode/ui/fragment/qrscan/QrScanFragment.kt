@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.qr
+package com.example.quickresponsecode.ui.fragment.qrscan
 
 import android.content.Intent
 import android.os.Bundle
@@ -18,6 +18,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,8 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -68,8 +71,8 @@ import com.example.quickresponsecode.configuration.WifiSSID
 import com.example.quickresponsecode.configuration.WifiType
 import com.example.quickresponsecode.data.enums.CameraNavigationButton
 import com.example.quickresponsecode.ui.component.OutlineButton
-import com.example.quickresponsecode.ui.fragment.qr.component.CameraNavigationButtonLayout
-import com.example.quickresponsecode.ui.fragment.qr.component.QrTopbar
+import com.example.quickresponsecode.ui.fragment.qrscan.component.CameraNavigationButtonLayout
+import com.example.quickresponsecode.ui.fragment.qrscan.component.QrTopbar
 import com.example.quickresponsecode.util.AppUtil.getCameraProvider
 import com.example.quickresponsecode.util.NavigationUtil.safeNavigate
 import com.example.quickresponsecode.util.PermissionUtil
@@ -132,11 +135,13 @@ class QrScanFragment : CoreFragment() {
      * for picking photo from gallery
      */
     private fun pickPhotoFromGallery() {
-        val pickImageOnlyRequest = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+        val pickImageOnlyRequest =
+            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
         galleryLauncher.launch(pickImageOnlyRequest)
     }
 
-    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+    private val galleryLauncher =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
             run {
                 if (uri == null) return@registerForActivityResult
 
@@ -150,11 +155,16 @@ class QrScanFragment : CoreFragment() {
 
                 viewModel.processPhotoFromGallery(
                     inputImage = inputImage,
-                    gotoNextScreen = { wifiSSID, wifiPassword, wifiType -> gotoNextScreen(wifiSSID = wifiSSID, wifiPassword = wifiPassword, wifiType = wifiType) }
+                    gotoNextScreen = { wifiSSID, wifiPassword, wifiType ->
+                        gotoNextScreen(
+                            wifiSSID = wifiSSID,
+                            wifiPassword = wifiPassword,
+                            wifiType = wifiType
+                        )
+                    }
                 )
             }
         }
-
 
 
     private fun gotoNextScreen(wifiSSID: WifiSSID, wifiPassword: WifiPassword, wifiType: WifiType) {
@@ -192,13 +202,12 @@ class QrScanFragment : CoreFragment() {
 
                 when (navigationButton) {
                     CameraNavigationButton.Scan -> {}
-                    CameraNavigationButton.Generate -> showToast("Generate")
+                    CameraNavigationButton.Generate -> safeNavigate(R.id.toQrGenerate)
                     CameraNavigationButton.Import -> pickPhotoFromGallery()
                 }
             },
             onReturnImageProxy = { imageProxy: ImageProxy ->
-                viewModel
-                    .processPhoto(
+                viewModel.processPhoto(
                         imageProxy = imageProxy,
                         gotoNextScreen = { wifiSSID, wifiPassword, wifiType -> gotoNextScreen(wifiSSID = wifiSSID, wifiPassword = wifiPassword, wifiType = wifiType) }
                     )
@@ -207,7 +216,8 @@ class QrScanFragment : CoreFragment() {
                 val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
                 settingLauncher.launch(intent)
             },
-            onOpenHistory = { showToast("History") }
+            onOpenHistory = { showToast("History") },
+            onCloseToast = { viewModel.closeToast() }
         )
     }
 }
@@ -223,6 +233,7 @@ fun HomeLayout(
     onOpenWifiSettings: () -> Unit = {},
 
     onOpenHistory: () -> Unit = {},
+    onCloseToast: () -> Unit = {}
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -368,17 +379,17 @@ fun HomeLayout(
                                     overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(0.7F)
                                 )
-                                /*OutlineButton(
-                                    text = "Connect",
-                                    textColor = Color(0xFFF1B94D),
-                                    borderStroke = BorderStroke(
-                                        width = 1.dp,
-                                        color = Color(0xFFF1B94D)
-                                    ),
-                                    paddingVertical = 10.dp,
-                                    paddingHorizontal = 10.dp,
-                                    onClick = {}
-                                )*/
+
+
+
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = null,
+                                    tint = Color.DarkGray,
+                                    modifier = Modifier
+                                        .clip(shape = CircleShape)
+                                        .clickable { onCloseToast() }
+                                )
                             }
                         }
                     )

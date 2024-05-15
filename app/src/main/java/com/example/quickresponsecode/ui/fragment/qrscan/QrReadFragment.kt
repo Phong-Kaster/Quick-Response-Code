@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.qr
+package com.example.quickresponsecode.ui.fragment.qrscan
 
 import android.app.Activity.RESULT_OK
 import android.content.Context

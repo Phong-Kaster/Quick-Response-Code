@@ -1,6 +1,5 @@
-package com.example.quickresponsecode.ui.fragment.qr
+package com.example.quickresponsecode.ui.fragment.qrscan
 
-import android.net.Uri
 import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
@@ -168,4 +167,7 @@ constructor(
             }
     }
 
+    fun closeToast(){
+        _showToast.value = false
+    }
 }
