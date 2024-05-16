@@ -14,7 +14,7 @@ object LocalDateUtil {
     fun currentEpochDay(): Long = LocalDate.now().toEpochDay()
 
 
-    fun LocalDateTime.elapsedMinutes(): Int {
+    fun LocalDateTime.toElapsedMinutes(): Int {
         return hour * 60 + minute
     }
 

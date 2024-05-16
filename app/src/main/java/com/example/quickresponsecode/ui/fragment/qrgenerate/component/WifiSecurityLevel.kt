@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.quickresponsecode.R
 import com.example.quickresponsecode.data.enums.SecurityLevel
-import com.example.quickresponsecode.ui.fragment.qrgenerate.QrGenerateState
+import com.example.quickresponsecode.ui.fragment.qrgenerate.state.QrGenerateState
 
 @Composable
 fun WifiSecurityLevel(

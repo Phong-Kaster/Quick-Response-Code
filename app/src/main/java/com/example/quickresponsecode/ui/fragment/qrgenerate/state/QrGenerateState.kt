@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.qrgenerate
+package com.example.quickresponsecode.ui.fragment.qrgenerate.state
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -10,8 +10,8 @@ import com.example.quickresponsecode.data.enums.SecurityLevel
 @Stable
 class QrGenerateState {
     var id by mutableLongStateOf(0L)
-    var name: String by mutableStateOf("")
+    var ssid: String by mutableStateOf("")
     var password: String by mutableStateOf("")
     var securityLevel: SecurityLevel by mutableStateOf(SecurityLevel.WPAWPA2)
-    var isHidden: Boolean by mutableStateOf(false)
+    var hidden: Boolean by mutableStateOf(false)
 }

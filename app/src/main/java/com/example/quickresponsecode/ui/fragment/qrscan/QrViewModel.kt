@@ -8,6 +8,10 @@ import com.example.quickresponsecode.QuickResponseCodeApplication
 import com.example.quickresponsecode.configuration.WifiSSID
 import com.example.quickresponsecode.configuration.WifiPassword
 import com.example.quickresponsecode.configuration.WifiType
+import com.example.quickresponsecode.data.database.model.WifiQr
+import com.example.quickresponsecode.data.enums.Method
+import com.example.quickresponsecode.data.enums.SecurityLevel
+import com.example.quickresponsecode.data.repository.WifiQrRepository
 import com.example.quickresponsecode.util.AppUtil
 import com.example.quickresponsecode.util.ScannerUtil.toInputImage
 import com.google.mlkit.vision.barcode.BarcodeScanner
@@ -27,7 +31,8 @@ import javax.inject.Inject
 class QrViewModel
 @Inject
 constructor(
-    private val context: QuickResponseCodeApplication
+    private val context: QuickResponseCodeApplication,
+    private val wifiQrRepository: WifiQrRepository,
 ) : ViewModel() {
 
     private var _showToast = MutableStateFlow<Boolean>(false)
@@ -105,6 +110,7 @@ constructor(
 
                         _showToast.value = false
                         imageProxy.close()
+                        insertWifiQR(wifiSSID = ssid ?: "", wifiPassword = password ?: "")
                         gotoNextScreen(ssid ?: "", password ?: "", type)
                     } else {
                         Log.d("SCANNER", "Barcode.TYPE_NOT_VALID")
@@ -167,7 +173,23 @@ constructor(
             }
     }
 
-    fun closeToast(){
+    fun closeToast() {
         _showToast.value = false
+    }
+
+    fun insertWifiQR(wifiSSID: WifiSSID, wifiPassword: WifiPassword) {
+        viewModelScope.launch(Dispatchers.IO) {
+
+            val wifiQr =  WifiQr(
+                id = 0,
+                wifiSSID = wifiSSID,
+                wifiPassword = wifiPassword,
+                securityLevel = SecurityLevel.WPAWPA2,
+                hidden = false,
+                method = Method.Scan
+            )
+
+            wifiQrRepository.insertOrUpdate(wifiQr)
+        }
     }
 }

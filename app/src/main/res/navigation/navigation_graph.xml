@@ -16,6 +16,9 @@
         android:id="@+id/qrGenerateFragment"
         android:name="com.example.quickresponsecode.ui.fragment.qrgenerate.QrGenerateFragment" />
 
+    <fragment
+        android:id="@+id/qrResultFragment"
+        android:name="com.example.quickresponsecode.ui.fragment.qrgenerate.QrResultFragment" />
 
     <action
         android:id="@+id/toQrRead"
@@ -34,5 +37,20 @@
         app:popEnterAnim="@anim/enter_slide_in_left"
         app:popExitAnim="@anim/exit_slide_out_right"
         app:popUpToInclusive="true" />
+
+    <action
+        android:id="@+id/toQrResult"
+        app:destination="@id/qrResultFragment"
+        app:enterAnim="@anim/enter_slide_in_right"
+        app:exitAnim="@anim/exit_slide_out_left"
+        app:popEnterAnim="@anim/enter_slide_in_left"
+        app:popExitAnim="@anim/exit_slide_out_right"
+        app:popUpToInclusive="true">
+
+        <argument
+            android:name="wifiQrId"
+            app:argType="long"/>
+
+    </action>
 
 </navigation>

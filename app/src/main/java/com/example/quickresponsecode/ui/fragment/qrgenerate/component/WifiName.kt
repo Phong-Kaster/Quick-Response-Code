@@ -20,7 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.quickresponsecode.R
-import com.example.quickresponsecode.ui.fragment.qrgenerate.QrGenerateState
+import com.example.quickresponsecode.ui.fragment.qrgenerate.state.QrGenerateState
 
 @Composable
 fun WifiName(
@@ -38,8 +38,8 @@ fun WifiName(
         )
         Spacer(modifier = Modifier.height(10.dp))
         BasicTextField(
-            value = qrGenerateState.name,
-            onValueChange = { qrGenerateState.name = it },
+            value = qrGenerateState.ssid,
+            onValueChange = { qrGenerateState.ssid = it },
             cursorBrush = SolidColor(Color.Cyan),
             singleLine = true,
             /*lineLimits = TextFieldLineLimits.SingleLine,*/
@@ -49,7 +49,7 @@ fun WifiName(
                 fontWeight = FontWeight(400)
             ),
             decorationBox = { innerTextField ->
-                if (qrGenerateState.name.isEmpty()) {
+                if (qrGenerateState.ssid.isEmpty()) {
                     Text(
                         text = stringResource(R.string.enter_network_name),
                         style = TextStyle(

@@ -1,5 +1,7 @@
 package com.example.quickresponsecode.ui.fragment.qrgenerate
 
+import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import com.example.jetpack.core.CoreFragment
 import com.example.jetpack.core.CoreLayout
@@ -32,12 +35,37 @@ import com.example.quickresponsecode.ui.fragment.qrgenerate.component.WifiHidden
 import com.example.quickresponsecode.ui.fragment.qrgenerate.component.WifiName
 import com.example.quickresponsecode.ui.fragment.qrgenerate.component.WifiPassword
 import com.example.quickresponsecode.ui.fragment.qrgenerate.component.WifiSecurityLevel
+import com.example.quickresponsecode.ui.fragment.qrgenerate.state.QrGenerateCondition
+import com.example.quickresponsecode.ui.fragment.qrgenerate.state.QrGenerateState
+import com.example.quickresponsecode.util.NavigationUtil.safeNavigate
+import com.example.quickresponsecode.util.collectLatestOnResume
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class QrGenerateFragment : CoreFragment() {
 
     private val viewModel: QrGenerateViewModel by viewModels()
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        listenCondition()
+    }
+
+    private fun listenCondition() {
+        collectLatestOnResume(viewModel.condition) { condition ->
+            when (condition) {
+                QrGenerateCondition.Success -> {
+                    val uid = viewModel.uid.value
+                    val destination = R.id.toQrResult
+                    safeNavigate(destination, bundle = bundleOf("uid" to uid))
+                }
+
+                QrGenerateCondition.Failure -> Toast.makeText(requireContext(), "Failed, please try again !", Toast.LENGTH_SHORT).show()
+
+                QrGenerateCondition.None -> {}
+            }
+        }
+    }
 
     @Composable
     override fun ComposeView() {
@@ -86,8 +114,12 @@ fun QrGenerateLayout(
                     .fillMaxWidth()
                     .padding(16.dp),
                 onClick = {
-                    if (qrGenerateState.name.isEmpty() || qrGenerateState.password.isEmpty()) {
-                        Toast.makeText(context, context.getString(R.string.please_fill_all_fields), Toast.LENGTH_SHORT).show()
+                    if (qrGenerateState.ssid.isEmpty() || qrGenerateState.password.isEmpty()) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.please_fill_all_fields),
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
                         onGenerate()
                     }

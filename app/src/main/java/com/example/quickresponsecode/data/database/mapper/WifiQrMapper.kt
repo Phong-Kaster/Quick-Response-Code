@@ -7,7 +7,7 @@ object WifiQrMapper {
     fun WifiQrEntity.toModel(): WifiQr {
         return WifiQr(
             id = this.id,
-            wifiName = this.wifiName,
+            wifiSSID = this.wifiSSID,
             wifiPassword = this.wifiPassword,
             securityLevel = this.securityLevel,
             hidden = this.hidden,
@@ -20,7 +20,7 @@ object WifiQrMapper {
     fun WifiQr.toEntity(): WifiQrEntity {
         return WifiQrEntity(
             id = this.id,
-            wifiName = this.wifiName,
+            wifiSSID = this.wifiSSID,
             wifiPassword = this.wifiPassword,
             securityLevel = this.securityLevel,
             hidden = this.hidden,

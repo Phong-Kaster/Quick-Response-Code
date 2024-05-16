@@ -33,7 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.quickresponsecode.R
-import com.example.quickresponsecode.ui.fragment.qrgenerate.QrGenerateState
+import com.example.quickresponsecode.ui.fragment.qrgenerate.state.QrGenerateState
 
 @Composable
 fun WifiHidden(
@@ -70,7 +70,7 @@ fun WifiHidden(
         ) {
             Text(
                 text =
-                if (qrGenerateState.isHidden) stringResource(id = R.string.yes)
+                if (qrGenerateState.hidden) stringResource(id = R.string.yes)
                 else stringResource(id = R.string.no),
                 style = TextStyle(
                     color = Color.Black,
@@ -113,7 +113,7 @@ fun WifiHidden(
                         },
                         onClick = {
                             expanded = false
-                            qrGenerateState.isHidden = true
+                            qrGenerateState.hidden = true
                         }
                     )
 
@@ -133,7 +133,7 @@ fun WifiHidden(
                         },
                         onClick = {
                             expanded = false
-                            qrGenerateState.isHidden = false
+                            qrGenerateState.hidden = false
                         }
                     )
                 }
