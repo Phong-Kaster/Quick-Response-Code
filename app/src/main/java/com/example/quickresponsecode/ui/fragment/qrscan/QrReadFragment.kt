@@ -189,7 +189,7 @@ class QrReadFragment : CoreFragment() {
         }
         config.homeSp = HomeSp().apply {
             fqdn = "test1.example.com"
-            friendlyName = "Some Friendly Name"
+            friendlyName = "$ssid Host"
         }
 
         val passpointConfiguration =

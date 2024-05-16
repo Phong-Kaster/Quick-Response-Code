@@ -28,7 +28,7 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class QrViewModel
+class QrScanViewModel
 @Inject
 constructor(
     private val context: QuickResponseCodeApplication,
@@ -93,6 +93,7 @@ constructor(
                     val corners = barcode.cornerPoints
                     val rawValue = barcode.rawValue
 
+                    Log.d("PHONG", "processPhoto - rawValue: $rawValue")
                     val valueType: Int = barcode.valueType
 
 
@@ -143,7 +144,7 @@ constructor(
                     val rawValue = barcode.rawValue
 
                     val valueType: Int = barcode.valueType
-
+                    Log.d("PHONG", "processPhoto - rawValue: $rawValue")
 
 
                     if (valueType == Barcode.TYPE_WIFI) {

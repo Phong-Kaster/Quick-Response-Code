@@ -30,4 +30,6 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="please_fill_all_fields">Please fill all fields</string>
+    <string name="download">Download</string>
+    <string name="generate_failed_please_try_again">Generate failed, please try again !</string>
 </resources>

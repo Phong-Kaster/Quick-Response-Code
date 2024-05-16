@@ -1,7 +1,11 @@
 package com.example.quickresponsecode.util
 
+import android.R.color.black
+import android.R.color.white
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
@@ -10,8 +14,16 @@ import android.net.wifi.WifiManager
 import android.net.wifi.WifiNetworkSpecifier
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import com.example.quickresponsecode.R
+import com.example.quickresponsecode.data.enums.SecurityLevel
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.MultiFormatWriter
+import com.google.zxing.common.BitMatrix
+import java.util.Hashtable
+
 
 object WifiUtil {
 
@@ -91,5 +103,52 @@ object WifiUtil {
 
         val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
         context.startActivity(intent)
+    }
+
+
+    /**
+     * this raw value is used to generate a QR code
+     */
+    fun generateWifiRawValue(
+        ssid: String,
+        encryption: SecurityLevel,
+        password: String,
+        hidden: Boolean,
+    ): String {
+        return "WIFI:S:" + ssid.replace("\n+", " ") +
+                ";T:" + encryption.value +
+                ";P:" + password +
+                ";H:" + hidden + ";;"
+    }
+
+
+    const val WIDTH: Int = 1080
+    fun encodeAsBitmap(rawValue: String): Bitmap? {
+        try {
+            val hints: Hashtable<EncodeHintType, Any> = Hashtable<EncodeHintType, Any>()
+            hints[EncodeHintType.CHARACTER_SET] = "utf-8"
+            hints[EncodeHintType.MARGIN] = 2
+            val result = MultiFormatWriter().encode(rawValue, BarcodeFormat.QR_CODE, WIDTH, WIDTH, hints)
+
+            val w = result.width
+            val h = result.height
+            val pixels = IntArray(w * h)
+            for (y in 0 until h) {
+                val offset = y * w
+                for (x in 0 until w) {
+                    pixels[offset + x] = if (result[x, y]) Color.BLACK else Color.WHITE
+                }
+            }
+            val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            bitmap.setPixels(pixels, 0, WIDTH, 0, 0, w, h)
+
+            Log.d("PHONG", "QrResultLayout - encodeAsBitmap - bitmap not null")
+
+            return bitmap
+        } catch (ex: java.lang.Exception) {
+            ex.printStackTrace()
+            Log.d("PHONG", "QrResultLayout - encodeAsBitmap - bitmap null")
+            return null
+        }
     }
 }

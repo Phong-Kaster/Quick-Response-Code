@@ -110,6 +110,10 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)
+
+    // Coil for image loading - https://coil-kt.github.io/coil/
+    implementation(libs.coil)
+    implementation(libs.coil.compose)
 }
 
 // Dependency injection with Hilt - Allow references to generated code

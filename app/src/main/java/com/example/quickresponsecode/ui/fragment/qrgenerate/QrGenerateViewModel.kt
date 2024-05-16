@@ -31,6 +31,9 @@ constructor(
     private val _condition = MutableStateFlow<QrGenerateCondition>(QrGenerateCondition.None)
     val condition = _condition.asStateFlow()
 
+    private val _wifiQr = MutableStateFlow<WifiQr?>(null)
+    val wifiQr = _wifiQr.asStateFlow()
+
     fun generate() {
         viewModelScope.launch(Dispatchers.IO) {
 
@@ -40,8 +43,9 @@ constructor(
                 wifiPassword = qrGenerateState.password,
                 hidden = qrGenerateState.hidden,
                 method = Method.Generate,
+                securityLevel = qrGenerateState.securityLevel,
                 epochDay = LocalDate.now().toEpochDay(),
-                epochMinutes = LocalDateTime.now().toElapsedMinutes()
+                epochMinutes = LocalDateTime.now().toElapsedMinutes(),
             )
 
             try {
@@ -52,6 +56,14 @@ constructor(
                 ex.printStackTrace()
                 _condition.value = QrGenerateCondition.Failure
             }
+        }
+    }
+
+    fun getWifiWithID(uid: Long?){
+        if(uid == null) return
+
+        viewModelScope.launch(Dispatchers.IO){
+            _wifiQr.value = wifiQrRepository.findWithID(uid)
         }
     }
 }

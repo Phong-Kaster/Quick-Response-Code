@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
+import androidx.navigation.NavOptions
 import com.example.jetpack.core.CoreFragment
 import com.example.jetpack.core.CoreLayout
 import com.example.quickresponsecode.R
@@ -57,7 +58,11 @@ class QrGenerateFragment : CoreFragment() {
                 QrGenerateCondition.Success -> {
                     val uid = viewModel.uid.value
                     val destination = R.id.toQrResult
-                    safeNavigate(destination, bundle = bundleOf("uid" to uid))
+                    safeNavigate(
+                        destination = destination,
+                        bundle = bundleOf("uid" to uid),
+                        navOptions = NavOptions.Builder().setPopUpTo(R.id.qrGenerateFragment, true).build()
+                    )
                 }
 
                 QrGenerateCondition.Failure -> Toast.makeText(requireContext(), "Failed, please try again !", Toast.LENGTH_SHORT).show()

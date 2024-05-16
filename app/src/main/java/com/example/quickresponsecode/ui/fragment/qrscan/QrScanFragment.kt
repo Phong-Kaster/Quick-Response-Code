@@ -36,7 +36,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -87,7 +86,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 @AndroidEntryPoint
 class QrScanFragment : CoreFragment() {
 
-    private val viewModel: QrViewModel by viewModels()
+    private val viewModel: QrScanViewModel by viewModels()
     private lateinit var cameraPermissionObserver: CameraPermissionLifecycleObserver
     private var hasApplicationNavigateNextScreen = AtomicBoolean(false)
 
