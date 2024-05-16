@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.quickresponsecode"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -102,6 +102,14 @@ dependencies {
 
     // Consume flows safely in Jetpack Compose - https://medium.com/androiddevelopers/consuming-flows-safely-in-jetpack-compose-cde014d0d5a3
     implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // ZXing for create QR Code- https://github.com/zxing/zxing
+    implementation(libs.core)
+
+    // Save data in a local database using Room - https://developer.android.com/training/data-storage/room#setup
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
 }
 
 // Dependency injection with Hilt - Allow references to generated code

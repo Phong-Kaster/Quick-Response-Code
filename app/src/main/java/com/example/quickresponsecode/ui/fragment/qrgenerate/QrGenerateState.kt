@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.qrgenerate.state
+package com.example.quickresponsecode.ui.fragment.qrgenerate
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue

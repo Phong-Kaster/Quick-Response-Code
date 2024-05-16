@@ -24,4 +24,10 @@
     <string name="wpa_wpa_2" translatable="false">WPA/WPA2</string>
     <string name="wep" translatable="false">WEP</string>
     <string name="none">None</string>
+    <string name="enter_network_name">Enter network name</string>
+    <string name="security">Security</string>
+    <string name="hidden">Hidden</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="please_fill_all_fields">Please fill all fields</string>
 </resources>
