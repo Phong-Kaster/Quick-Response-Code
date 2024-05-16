@@ -87,8 +87,16 @@ class QrResultFragment : CoreFragment() {
         QrResultLayout(
             wifiQr = viewModel.wifiQr.collectAsStateWithLifecycle().value,
             onBack = { safeNavigateUp() },
-            onDownload = {  },
-            onShare = { },
+            onDownload = { bitmap: Bitmap? ->
+                if (bitmap == null) {
+                    Toast.makeText(context, getString(R.string.download_failed_please_try_again), Toast.LENGTH_SHORT).show()
+                    return@QrResultLayout
+                }
+
+                Toast.makeText(context, getString(R.string.download_successfully), Toast.LENGTH_SHORT).show()
+                AppUtil.storeImage(bitmap = bitmap)
+            },
+            onShare = { Toast.makeText(context, "Share with my community !", Toast.LENGTH_SHORT).show() },
             onCopyToClipboard = { AppUtil.copyToClipboard(context = requireContext(), text = viewModel.wifiQr.value?.wifiPassword ?: "") }
         )
     }
@@ -98,7 +106,7 @@ class QrResultFragment : CoreFragment() {
 fun QrResultLayout(
     wifiQr: WifiQr?,
     onBack: () -> Unit = {},
-    onDownload: () -> Unit = {},
+    onDownload: (Bitmap?) -> Unit = {},
     onShare: () -> Unit = {},
     onCopyToClipboard: () -> Unit = {},
 ) {
@@ -112,11 +120,7 @@ fun QrResultLayout(
             hidden = wifiQr?.hidden ?: false,
             encryption = wifiQr?.securityLevel ?: SecurityLevel.NONE
         )
-
         bitmap = WifiUtil.encodeAsBitmap(rawValue)
-        Log.d("PHONG", "QrResultLayout - raw value: $rawValue")
-        Log.d("PHONG", "QrResultLayout - bitmap: $bitmap")
-        Log.d("PHONG", "QrResultLayout - bitmap width: ${bitmap?.width} - height: ${bitmap?.height} ")
     }
 
     CoreLayout(
@@ -242,7 +246,9 @@ fun QrResultLayout(
                 SolidButton(
                     modifier = Modifier.fillMaxWidth(),
                     marginHorizontal = 0.dp,
-                    onClick = onDownload,
+                    onClick = {
+                        onDownload(bitmap)
+                    },
                     backgroundColor = Color(0xFF1C68FB),
                     textColor = Color.White,
                     text = stringResource(id = R.string.download),

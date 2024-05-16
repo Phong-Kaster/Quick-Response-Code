@@ -4,9 +4,11 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import android.view.Window
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -15,6 +17,9 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.example.quickresponsecode.R
+import java.io.File
+import java.io.FileOutputStream
+import java.util.Date
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -83,4 +88,32 @@ object AppUtil {
         val clip = ClipData.newPlainText("Copied Text", text)
         clipboard.setPrimaryClip(clip)
     }
+
+    fun storeImage(bitmap: Bitmap) {
+
+        val path = Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_PICTURES
+        )
+
+        val root = Environment.getExternalStorageDirectory().absolutePath
+        val myDir = File(path, root)
+
+        myDir.mkdirs()
+
+        val fname = "WifiQR-${Date().time}.jpg"
+        val file = File(myDir, fname)
+        if (file.exists()) file.delete()
+        try {
+            val out = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+            out.flush()
+            out.close()
+            Log.d("PHONG", "storeImage success ")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Log.d("PHONG", "storeImage failed ")
+        }
+    }
+
+
 }
