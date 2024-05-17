@@ -74,6 +74,7 @@ import com.example.quickresponsecode.ui.fragment.qrscan.component.CameraNavigati
 import com.example.quickresponsecode.ui.fragment.qrscan.component.QrTopbar
 import com.example.quickresponsecode.util.AppUtil.getCameraProvider
 import com.example.quickresponsecode.util.NavigationUtil.safeNavigate
+import com.example.quickresponsecode.util.NavigationUtil.safeNavigateUp
 import com.example.quickresponsecode.util.PermissionUtil
 import com.example.quickresponsecode.util.SoundUtil
 import com.google.mlkit.vision.common.InputImage
@@ -215,7 +216,7 @@ class QrScanFragment : CoreFragment() {
                 val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
                 settingLauncher.launch(intent)
             },
-            onOpenHistory = { showToast("History") },
+            onOpenHistory = { safeNavigate(R.id.toQrHistory) },
             onCloseToast = { viewModel.closeToast() }
         )
     }

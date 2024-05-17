@@ -39,6 +39,7 @@ import com.example.quickresponsecode.ui.fragment.qrgenerate.component.WifiSecuri
 import com.example.quickresponsecode.ui.fragment.qrgenerate.state.QrGenerateCondition
 import com.example.quickresponsecode.ui.fragment.qrgenerate.state.QrGenerateState
 import com.example.quickresponsecode.util.NavigationUtil.safeNavigate
+import com.example.quickresponsecode.util.NavigationUtil.safeNavigateUp
 import com.example.quickresponsecode.util.collectLatestOnResume
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -77,7 +78,8 @@ class QrGenerateFragment : CoreFragment() {
         super.ComposeView()
         QrGenerateLayout(
             qrGenerateState = viewModel.qrGenerateState,
-            onGenerate = { viewModel.generate() }
+            onGenerate = { viewModel.generate() },
+            onBack = {safeNavigateUp()}
         )
     }
 }

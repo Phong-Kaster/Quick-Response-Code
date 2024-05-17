@@ -34,4 +34,6 @@
     <string name="generate_failed_please_try_again">Generate failed, please try again !</string>
     <string name="download_failed_please_try_again">Download failed, please try again !</string>
     <string name="download_successfully">Download successfully</string>
+    <string name="history">History</string>
+    <string name="no_data">No data</string>
 </resources>

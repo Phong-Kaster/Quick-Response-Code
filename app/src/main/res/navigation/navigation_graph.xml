@@ -20,6 +20,10 @@
         android:id="@+id/qrResultFragment"
         android:name="com.example.quickresponsecode.ui.fragment.qrgenerate.QrResultFragment" />
 
+    <fragment
+        android:id="@+id/qrHistoryFragment"
+        android:name="com.example.quickresponsecode.ui.fragment.qrhistory.QrHistoryFragment" />
+
     <action
         android:id="@+id/toQrRead"
         app:destination="@id/qrReadFragment"
@@ -50,7 +54,15 @@
         <argument
             android:name="wifiQrId"
             app:argType="long"/>
-
     </action>
+
+    <action
+        android:id="@+id/toQrHistory"
+        app:destination="@id/qrHistoryFragment"
+        app:enterAnim="@anim/enter_slide_in_right"
+        app:exitAnim="@anim/exit_slide_out_left"
+        app:popEnterAnim="@anim/enter_slide_in_left"
+        app:popExitAnim="@anim/exit_slide_out_right"
+        app:popUpToInclusive="true" />
 
 </navigation>

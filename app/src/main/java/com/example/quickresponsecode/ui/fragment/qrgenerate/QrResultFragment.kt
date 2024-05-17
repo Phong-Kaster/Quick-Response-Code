@@ -94,7 +94,7 @@ class QrResultFragment : CoreFragment() {
                 }
 
                 Toast.makeText(context, getString(R.string.download_successfully), Toast.LENGTH_SHORT).show()
-                AppUtil.storeImage(bitmap = bitmap)
+                AppUtil.storeImage(context = requireContext(), bitmap = bitmap)
             },
             onShare = { Toast.makeText(context, "Share with my community !", Toast.LENGTH_SHORT).show() },
             onCopyToClipboard = { AppUtil.copyToClipboard(context = requireContext(), text = viewModel.wifiQr.value?.wifiPassword ?: "") }

@@ -161,6 +161,7 @@ constructor(
                         _showToast.value = false
 
                         gotoNextScreen(ssid ?: "", password ?: "", type)
+                        insertWifiQR(wifiSSID = ssid ?: "", wifiPassword = password ?: "")
                     } else {
                         Log.d("SCANNER", "Barcode.TYPE_NOT_VALID")
                         _showToast.value = true

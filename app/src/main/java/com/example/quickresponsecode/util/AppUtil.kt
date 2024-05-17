@@ -11,6 +11,7 @@ import android.net.Uri
 import android.os.Environment
 import android.util.Log
 import android.view.Window
+import android.widget.Toast
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
@@ -89,15 +90,16 @@ object AppUtil {
         clipboard.setPrimaryClip(clip)
     }
 
-    fun storeImage(bitmap: Bitmap) {
+    fun storeImage(context: Context , bitmap: Bitmap) {
 
         val path = Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_PICTURES
         )
 
         val root = Environment.getExternalStorageDirectory().absolutePath
-        val myDir = File(path, root)
+        val myDir = File(path, "$root/WifiQR")
 
+        Toast.makeText(context,"$root/WifiQR", Toast.LENGTH_SHORT).show()
         myDir.mkdirs()
 
         val fname = "WifiQR-${Date().time}.jpg"
