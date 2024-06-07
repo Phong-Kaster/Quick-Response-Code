@@ -84,7 +84,11 @@ class QrGenerateFragment : CoreFragment() {
         super.ComposeView()
         QrGenerateLayout(
             qrGenerateState = viewModel.qrGenerateState,
-            onGenerate = { viewModel.generate() },
+            onGenerate = {
+                viewModel.generate(
+                    onShowToast = { Toast.makeText(requireContext(),  getString(R.string.password_and_ssid_are_required), Toast.LENGTH_SHORT).show() },
+                )
+            },
             onBack = {safeNavigateUp()}
         )
     }

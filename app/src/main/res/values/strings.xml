@@ -45,5 +45,5 @@
     <string name="close">Close</string>
     <string name="camera_enabled">Camera enabled</string>
     <string name="next_your_device_may_display_a_dialog_box"><![CDATA[Next, your device may display a dialog box. This is to get your permission for this app to automatically connect to WiFi. You have two choices:\n\n• Allow - If you choose this, the app will have the permission to connect to WiFi automatically. Your device will be connected to WiFi within a few minutes.\n\n• No, Thanks - If you choose this, the app won’t connect to WiFi automatically. You’ll need to manually connect to WiFi by clicking ‘Connect’ again.\n\nIf you don’t see the dialog box, please check your notification control center from the quick settings and select ‘Allow’ & turn on Wifi before clicking on \'Connect\' to continue.]]></string>
-
+    <string name="password_and_ssid_are_required">Password and SSID are required</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.example.quickresponsecode.ui.fragment.qrgenerate
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.quickresponsecode.data.database.model.WifiQr
@@ -34,8 +35,15 @@ constructor(
     private val _wifiQr = MutableStateFlow<WifiQr?>(null)
     val wifiQr = _wifiQr.asStateFlow()
 
-    fun generate() {
+    fun generate(
+        onShowToast: ()->Unit = {}
+    ) {
         viewModelScope.launch(Dispatchers.IO) {
+
+            if(qrGenerateState.ssid.isEmpty() || qrGenerateState.password.isEmpty()){
+                onShowToast()
+                return@launch
+            }
 
             val wifiQr = WifiQr(
                 id = 0,
@@ -47,6 +55,7 @@ constructor(
                 epochDay = LocalDate.now().toEpochDay(),
                 epochMinutes = LocalDateTime.now().toElapsedMinutes(),
             )
+
 
             try {
                 val id = wifiQrRepository.insertOrUpdate(wifiQr)
