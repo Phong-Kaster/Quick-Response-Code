@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.util.Size
 import android.view.View
 import androidx.activity.result.PickVisualMediaRequest
@@ -71,6 +72,7 @@ import com.example.quickresponsecode.R
 import com.example.quickresponsecode.configuration.WifiPassword
 import com.example.quickresponsecode.configuration.WifiSSID
 import com.example.quickresponsecode.data.enums.CameraNavigationButton
+import com.example.quickresponsecode.data.model.NetworkStatusState
 import com.example.quickresponsecode.ui.component.OutlineButton
 import com.example.quickresponsecode.util.AppUtil.getCameraProvider
 import com.example.quickresponsecode.util.NavigationUtil.safeNavigate
@@ -174,6 +176,7 @@ class QrScanFragment : CoreFragment() {
 
 
     private fun gotoNextScreen(wifiSSID: WifiSSID, wifiPassword: WifiPassword) {
+        Log.d("PHONG", "gotoNextScreen-----------------------")
         if (hasApplicationNavigateNextScreen.getAndSet(true)) return
 
         SoundUtil.vibrateAndRing(context = requireContext())
@@ -188,7 +191,6 @@ class QrScanFragment : CoreFragment() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.checkInternetConnection()
         hasApplicationNavigateNextScreen.set(false)
     }
 
@@ -199,7 +201,7 @@ class QrScanFragment : CoreFragment() {
 
 
         HomeLayout(
-            isInternetConnected = viewModel.isInternetConnected.collectAsStateWithLifecycle().value,
+            latestNetworkState = viewModel.latestNetworkState.collectAsStateWithLifecycle().value,
             showToast = viewModel.showToast.collectAsStateWithLifecycle().value,
             chosenButton = chosenButton,
             onClickCameraNavigationButton = { navigationButton: CameraNavigationButton ->
@@ -213,9 +215,14 @@ class QrScanFragment : CoreFragment() {
             },
             onReturnImageProxy = { imageProxy: ImageProxy ->
                 viewModel.processPhoto(
-                        imageProxy = imageProxy,
-                        gotoNextScreen = { wifiSSID, wifiPassword, wifiType -> gotoNextScreen(wifiSSID = wifiSSID, wifiPassword = wifiPassword) }
-                    )
+                    imageProxy = imageProxy,
+                    gotoNextScreen = { wifiSSID, wifiPassword, wifiType ->
+                        gotoNextScreen(
+                            wifiSSID = wifiSSID,
+                            wifiPassword = wifiPassword
+                        )
+                    }
+                )
             },
             onOpenWifiSettings = {
                 val intent = Intent(Settings.ACTION_WIFI_SETTINGS)
@@ -240,7 +247,7 @@ class QrScanFragment : CoreFragment() {
 
 @Composable
 fun HomeLayout(
-    isInternetConnected: Boolean = true,
+    latestNetworkState: NetworkStatusState,
     showToast: Boolean = true,
     chosenButton: CameraNavigationButton = CameraNavigationButton.Scan,
 
@@ -412,7 +419,7 @@ fun HomeLayout(
 
                     // No internet connection
                     AnimatedVisibility(
-                        visible = !isInternetConnected,
+                        visible = latestNetworkState is NetworkStatusState.NetworkStatusDisconnected,
                         content = {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -494,5 +501,8 @@ fun HomeLayout(
 @Preview
 @Composable
 private fun PreviewHome() {
-    HomeLayout()
+    HomeLayout(
+        latestNetworkState = NetworkStatusState.NetworkStatusDisconnected,
+        onClickCameraNavigationButton = {}
+    )
 }

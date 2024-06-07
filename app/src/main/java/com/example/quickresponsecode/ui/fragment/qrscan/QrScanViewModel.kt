@@ -4,15 +4,17 @@ import android.util.Log
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.quickresponsecode.QuickResponseCodeApplication
-import com.example.quickresponsecode.configuration.WifiSSID
 import com.example.quickresponsecode.configuration.WifiPassword
+import com.example.quickresponsecode.configuration.WifiSSID
 import com.example.quickresponsecode.configuration.WifiType
 import com.example.quickresponsecode.data.database.model.WifiQr
 import com.example.quickresponsecode.data.enums.Method
+import com.example.quickresponsecode.data.enums.NetworkType
 import com.example.quickresponsecode.data.enums.SecurityLevel
+import com.example.quickresponsecode.data.model.NetworkStatusState
+import com.example.quickresponsecode.data.repository.NetworkConnectionManager
+import com.example.quickresponsecode.data.repository.SettingRepository
 import com.example.quickresponsecode.data.repository.WifiQrRepository
-import com.example.quickresponsecode.util.AppUtil
 import com.example.quickresponsecode.util.ScannerUtil.toInputImage
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
@@ -23,6 +25,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,20 +34,50 @@ import javax.inject.Inject
 class QrScanViewModel
 @Inject
 constructor(
-    private val context: QuickResponseCodeApplication,
     private val wifiQrRepository: WifiQrRepository,
+    private val networkConnectionManager: NetworkConnectionManager,
+    private val settingRepository: SettingRepository,
 ) : ViewModel() {
 
+    /*************************************************
+     * show Toast
+     */
     private var _showToast = MutableStateFlow<Boolean>(false)
     val showToast = _showToast.asStateFlow()
 
-    private var _isInternetConnected = MutableStateFlow<Boolean>(false)
-    val isInternetConnected = _isInternetConnected.asStateFlow()
 
-    private var _qrCodeResult = MutableStateFlow<String?>("")
-    val qrCodeResult = _qrCodeResult.asStateFlow()
+    /*************************************************
+     * network Status
+     */
+    private var _networkStatus = MutableStateFlow<NetworkType>(NetworkType.UNKNOWN)
+    val networkStatus = _networkStatus.asStateFlow()
 
-    // Configure scanner
+    /*************************************************
+     * enable Rationale Dialog
+     */
+    private var _enableAnimation = MutableStateFlow<Boolean>(false)
+    val enableAnimation = _enableAnimation.asStateFlow()
+
+    /*************************************************
+     * enable Rationale Dialog
+     */
+    private var _enableRationaleDialog = MutableStateFlow<Boolean>(false)
+    val enableRationaleDialog = _enableRationaleDialog.asStateFlow()
+
+
+    /*************************************************
+     * previous Network Status represents the status before users click Connect
+     * latest Network Status represents the status after users click Connect
+     */
+    private var _previousNetworkState = MutableStateFlow<NetworkStatusState>(NetworkStatusState.NetworkStatusDisconnected)
+    val previousNetworkState = _previousNetworkState.asStateFlow()
+
+    private var _latestNetworkState = MutableStateFlow<NetworkStatusState>(NetworkStatusState.NetworkStatusDisconnected)
+    val latestNetworkState = _latestNetworkState.asStateFlow()
+
+    /*************************************************
+     * Configure scanner
+     */
     private val options = BarcodeScannerOptions.Builder()
         .setBarcodeFormats(Barcode.FORMAT_QR_CODE, Barcode.FORMAT_ALL_FORMATS)
         .enableAllPotentialBarcodes() // Optional
@@ -53,12 +86,56 @@ constructor(
     val scanner: BarcodeScanner by lazy { BarcodeScanning.getClient(options) }
 
     init {
-        checkInternetConnection()
+        collectNetworkStatus()
+        enableRationaleDialog()
+
+        collectPreviousNetworkState()
+        collectLatestNetworkState()
     }
 
-    fun checkInternetConnection() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _isInternetConnected.value = AppUtil.isInternetConnected(context)
+
+
+    private fun collectNetworkStatus() {
+        viewModelScope.launch {
+            networkConnectionManager.state
+                .collectLatest {
+                    if (it is NetworkStatusState.NetworkStatusConnected) {
+                        //Log.d("PHONG", "NetworkStatusState: ${it.type}")
+                        _networkStatus.value = it.type
+                        _latestNetworkState.value = it
+                        _enableAnimation.value = false
+                    } else {
+                        //Log.d("PHONG", "NetworkStatusState: $it")
+                        _networkStatus.value = NetworkType.UNKNOWN
+                        _latestNetworkState.value = NetworkStatusState.NetworkStatusDisconnected
+                        _enableAnimation.value = false
+                    }
+                }
+        }
+    }
+
+    /*************************************************
+     * this function get network state before users click Connect
+     */
+    private fun collectPreviousNetworkState() {
+        viewModelScope.launch {
+            _previousNetworkState.value =  networkConnectionManager.state.value
+        }
+    }
+
+    /*************************************************
+     * this function get network state after users click Connect
+     */
+    private fun collectLatestNetworkState() {
+        viewModelScope.launch {
+            networkConnectionManager.state
+                .collectLatest {
+                    if (it is NetworkStatusState.NetworkStatusConnected) {
+                        _latestNetworkState.value = it
+                    } else {
+                        _latestNetworkState.value = NetworkStatusState.NetworkStatusDisconnected
+                    }
+                }
         }
     }
 
@@ -91,13 +168,6 @@ constructor(
                     imageProxy.close()
                     return@addOnSuccessListener
                 }
-
-                /*val wifiBarcodes = barcodes.filter { it.valueType == Barcode.TYPE_WIFI }*/
-                if (barcodes.isEmpty()) {
-                    imageProxy.close()
-                    return@addOnSuccessListener
-                }
-
 
                 for (barcode in barcodes) {
                     val bounds = barcode.boundingBox
@@ -146,6 +216,7 @@ constructor(
                 exception.printStackTrace()
             }
     }
+
 
     /*************************************************
      * processPhotoFromGallery - this function process photo when app receive a photo from gallery
@@ -198,11 +269,16 @@ constructor(
             }
     }
 
-    fun closeToast() {
-        _showToast.value = false
-    }
+    fun closeToast() { _showToast.value = false }
+    fun disableAnimation() { _enableAnimation.value = false }
+    fun enableAnimation() { _enableAnimation.value = true }
 
-    fun insertWifiQR(wifiSSID: WifiSSID, wifiPassword: WifiPassword) {
+    fun resetConnectMethod() { _networkStatus.value = NetworkType.UNKNOWN }
+
+    /*************************************************
+     * insert a Wifi QR into database
+     */
+    private fun insertWifiQR(wifiSSID: WifiSSID, wifiPassword: WifiPassword) {
         viewModelScope.launch(Dispatchers.IO) {
 
             val wifiQr =  WifiQr(
@@ -215,6 +291,25 @@ constructor(
             )
 
             wifiQrRepository.insertOrUpdate(wifiQr)
+        }
+    }
+
+    /*************************************************
+     * disable rationale dialog
+     */
+    fun disableRationaleDialog(){
+        viewModelScope.launch(Dispatchers.IO){
+            _enableRationaleDialog.value = false
+            settingRepository.disableRationaleDialog()
+        }
+    }
+
+    /*************************************************
+     * this rationale dialog in this screen shows only one time
+     */
+    private fun enableRationaleDialog(){
+        viewModelScope.launch(Dispatchers.IO){
+            _enableRationaleDialog.value = settingRepository.enableRationaleDialog()
         }
     }
 }

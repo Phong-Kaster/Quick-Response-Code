@@ -17,4 +17,6 @@ object AppModule {
     fun provideApplication(@ApplicationContext context: Context): QuickResponseCodeApplication {
         return context as QuickResponseCodeApplication
     }
+
+
 }

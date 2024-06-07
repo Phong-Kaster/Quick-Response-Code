@@ -40,4 +40,9 @@ constructor(
     }
 
     fun getLanguageFlow() = settingDatastore.languageFlow
+
+    fun enableRationaleDialog(): Boolean = settingDatastore.enableRationaleDialog
+    fun disableRationaleDialog() {
+        settingDatastore.enableRationaleDialog = false
+    }
 }

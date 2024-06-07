@@ -1,6 +1,5 @@
 package com.example.quickresponsecode.ui.fragment.qrgenerate
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.quickresponsecode.data.database.model.WifiQr

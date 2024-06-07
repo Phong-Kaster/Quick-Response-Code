@@ -24,6 +24,10 @@
         android:id="@+id/qrHistoryFragment"
         android:name="com.example.quickresponsecode.ui.fragment.qrhistory.QrHistoryFragment" />
 
+    <fragment
+        android:id="@+id/qrSuccessFragment"
+        android:name="com.example.quickresponsecode.ui.fragment.qrscan.QrScanFragment" />
+
     <action
         android:id="@+id/toQrRead"
         app:destination="@id/qrReadFragment"
@@ -59,6 +63,15 @@
     <action
         android:id="@+id/toQrHistory"
         app:destination="@id/qrHistoryFragment"
+        app:enterAnim="@anim/enter_slide_in_right"
+        app:exitAnim="@anim/exit_slide_out_left"
+        app:popEnterAnim="@anim/enter_slide_in_left"
+        app:popExitAnim="@anim/exit_slide_out_right"
+        app:popUpToInclusive="true" />
+
+    <action
+        android:id="@+id/toQrSuccess"
+        app:destination="@id/qrSuccessFragment"
         app:enterAnim="@anim/enter_slide_in_right"
         app:exitAnim="@anim/exit_slide_out_left"
         app:popEnterAnim="@anim/enter_slide_in_left"

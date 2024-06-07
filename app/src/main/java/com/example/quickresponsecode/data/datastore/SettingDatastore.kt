@@ -2,6 +2,7 @@ package com.example.quickresponsecode.data.datastore
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -31,6 +32,7 @@ constructor(application: QuickResponseCodeApplication) {
     private val enableIntroKey = booleanPreferencesKey("enableIntroKey")
     private val enableLanguageIntroKey = booleanPreferencesKey("enableLanguageIntroKey")
     private val logoKey = stringPreferencesKey("logoKey")
+    private val enableRationaleDialogKey = booleanPreferencesKey("enableRationaleDialogKey")
 
     // Enable Intro
     var enableIntro: Boolean
@@ -57,4 +59,12 @@ constructor(application: QuickResponseCodeApplication) {
     val languageFlow: Flow<Language> = datastore.data.map { mutablePreferences ->
         Language.getByCode(code = mutablePreferences[languageKey])
     }
+
+
+
+
+    // Enable Intro
+    var enableRationaleDialog: Boolean
+        get() = runBlocking { datastore.data.first()[enableRationaleDialogKey] ?: true }
+        set(value) = runBlocking { datastore.edit { pref -> pref[enableRationaleDialogKey] = value } }
 }
