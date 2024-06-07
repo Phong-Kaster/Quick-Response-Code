@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.qrscan.component
+package com.panda.wifipassword.ui.screen.qr.qrscan.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,7 +25,8 @@ fun QrTopbar(
     enableFlashlight: Boolean = false,
     modifier: Modifier = Modifier,
     onOpenHistory: () -> Unit = {},
-    onOpenFlashlight: () -> Unit = {}
+    onOpenFlashlight: () -> Unit = {},
+    onOpenSetting: () -> Unit = {},
 ) {
     // HISTORY BUTTON AND FLASHLIGHT
     Row(
@@ -54,6 +55,21 @@ fun QrTopbar(
                     painter =
                     if (enableFlashlight) painterResource(id = R.drawable.ic_flash_on)
                     else painterResource(id = R.drawable.ic_flash_off),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            },
+            modifier = Modifier
+                .clip(shape = CircleShape)
+                .background(color = Color.Black.copy(alpha = 0.4F))
+        )
+
+        IconButton(
+            onClick = onOpenSetting,
+            content = {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_setting_2),
                     contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)

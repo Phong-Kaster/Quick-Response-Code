@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.qrgenerate.component
+package com.panda.wifipassword.ui.screen.qr.qrgenerate.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -77,12 +77,13 @@ fun WifiPassword(
                 decorationBox = { innerTextField ->
                     if (qrGenerateState.password.isEmpty()) {
                         Text(
-                            text = "Enter password",
+                            text = stringResource(R.string.enter_password),
                             style = TextStyle(
                                 color = Color(0xFFB0B0B0),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight(400)
-                            )
+                            ),
+                            modifier = Modifier.padding(vertical = 3.dp),
                         )
                     }
                     innerTextField()
@@ -104,7 +105,6 @@ fun WifiPassword(
                     )
                 })
         }
-
     }
 }
 

@@ -1,7 +1,5 @@
 package com.example.quickresponsecode.util
 
-import android.R.color.black
-import android.R.color.white
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -16,12 +14,12 @@ import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import com.example.quickresponsecode.R
 import com.example.quickresponsecode.data.enums.SecurityLevel
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.MultiFormatWriter
-import com.google.zxing.common.BitMatrix
 import java.util.Hashtable
 
 
@@ -151,4 +149,18 @@ object WifiUtil {
             return null
         }
     }
+    /*************************************************
+     * open Wifi Panel
+     * */
+    fun openWifiPanel(context: Context, text: String?,
+                      wifiLauncher: ActivityResultLauncher<Intent>
+    ){
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+
+        AppUtil.copyToClipboard(context = context, text = text ?: "")
+
+        val intent = Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY)
+        wifiLauncher.launch(intent)
+    }
+
 }

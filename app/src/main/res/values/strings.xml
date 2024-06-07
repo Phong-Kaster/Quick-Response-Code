@@ -36,4 +36,14 @@
     <string name="download_successfully">Download successfully</string>
     <string name="history">History</string>
     <string name="no_data">No data</string>
+    <string name="hidden_wifi">Hidden Wifi</string>
+    <string name="enter_password">Enter password</string>
+    <string name="go_to_connect">Go to connect</string>
+    <string name="connecting">Connecting</string>
+    <string name="this_feature_requires_camera_permission"><![CDATA[This feature requires camera permission to automatically detect QR codes that you want to scan. To continue using this feature, please grant camera permission by the following steps:\n• Go to the Settings app.\n• Open permissions\n• Find Camera & select Allow all the time]]></string>
+    <string name="got_it">Got it</string>
+    <string name="close">Close</string>
+    <string name="camera_enabled">Camera enabled</string>
+    <string name="next_your_device_may_display_a_dialog_box"><![CDATA[Next, your device may display a dialog box. This is to get your permission for this app to automatically connect to WiFi. You have two choices:\n\n• Allow - If you choose this, the app will have the permission to connect to WiFi automatically. Your device will be connected to WiFi within a few minutes.\n\n• No, Thanks - If you choose this, the app won’t connect to WiFi automatically. You’ll need to manually connect to WiFi by clicking ‘Connect’ again.\n\nIf you don’t see the dialog box, please check your notification control center from the quick settings and select ‘Allow’ & turn on Wifi before clicking on \'Connect\' to continue.]]></string>
+
 </resources>

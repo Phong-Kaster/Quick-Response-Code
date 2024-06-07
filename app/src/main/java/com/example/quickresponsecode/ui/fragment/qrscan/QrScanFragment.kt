@@ -1,6 +1,7 @@
 package com.example.quickresponsecode.ui.fragment.qrscan
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Size
@@ -27,6 +28,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -37,6 +39,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -67,17 +70,16 @@ import com.example.jetpack.core.CoreLayout
 import com.example.quickresponsecode.R
 import com.example.quickresponsecode.configuration.WifiPassword
 import com.example.quickresponsecode.configuration.WifiSSID
-import com.example.quickresponsecode.configuration.WifiType
 import com.example.quickresponsecode.data.enums.CameraNavigationButton
 import com.example.quickresponsecode.ui.component.OutlineButton
-import com.example.quickresponsecode.ui.fragment.qrscan.component.CameraNavigationButtonLayout
-import com.example.quickresponsecode.ui.fragment.qrscan.component.QrTopbar
 import com.example.quickresponsecode.util.AppUtil.getCameraProvider
 import com.example.quickresponsecode.util.NavigationUtil.safeNavigate
-import com.example.quickresponsecode.util.NavigationUtil.safeNavigateUp
 import com.example.quickresponsecode.util.PermissionUtil
 import com.example.quickresponsecode.util.SoundUtil
 import com.google.mlkit.vision.common.InputImage
+import com.panda.wifipassword.ui.screen.qr.qrscan.component.CameraNavigationButtonLayout
+import com.panda.wifipassword.ui.screen.qr.qrscan.component.QrRationaleCameraDialog
+import com.panda.wifipassword.ui.screen.qr.qrscan.component.QrTopbar
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -100,10 +102,14 @@ class QrScanFragment : CoreFragment() {
     /*************************************************
      * for request camera permission
      */
-    private var showPopupOnePermission: Boolean by mutableStateOf(false)
+    private var showRationaleDialog: Boolean by mutableStateOf(false)
     private val callbackOnePermission = object : CameraPermissionLifecycleObserver.Callback {
         override fun openRationaleDialog() {
-            showPopupOnePermission = true
+            showRationaleDialog = true
+        }
+
+        override fun requestPermissionsOneMoreTime() {
+            requestCameraPermission()
         }
     }
 
@@ -155,11 +161,10 @@ class QrScanFragment : CoreFragment() {
 
                 viewModel.processPhotoFromGallery(
                     inputImage = inputImage,
-                    gotoNextScreen = { wifiSSID, wifiPassword, wifiType ->
+                    gotoNextScreen = { wifiSSID, wifiPassword ->
                         gotoNextScreen(
                             wifiSSID = wifiSSID,
                             wifiPassword = wifiPassword,
-                            wifiType = wifiType
                         )
                     }
                 )
@@ -167,7 +172,8 @@ class QrScanFragment : CoreFragment() {
         }
 
 
-    private fun gotoNextScreen(wifiSSID: WifiSSID, wifiPassword: WifiPassword, wifiType: WifiType) {
+
+    private fun gotoNextScreen(wifiSSID: WifiSSID, wifiPassword: WifiPassword) {
         if (hasApplicationNavigateNextScreen.getAndSet(true)) return
 
         SoundUtil.vibrateAndRing(context = requireContext())
@@ -176,7 +182,6 @@ class QrScanFragment : CoreFragment() {
             bundle = bundleOf(
                 "wifiSSID" to wifiSSID,
                 "wifiPassword" to wifiPassword,
-                "wifiType" to wifiType
             )
         )
     }
@@ -209,7 +214,7 @@ class QrScanFragment : CoreFragment() {
             onReturnImageProxy = { imageProxy: ImageProxy ->
                 viewModel.processPhoto(
                         imageProxy = imageProxy,
-                        gotoNextScreen = { wifiSSID, wifiPassword, wifiType -> gotoNextScreen(wifiSSID = wifiSSID, wifiPassword = wifiPassword, wifiType = wifiType) }
+                        gotoNextScreen = { wifiSSID, wifiPassword, wifiType -> gotoNextScreen(wifiSSID = wifiSSID, wifiPassword = wifiPassword) }
                     )
             },
             onOpenWifiSettings = {
@@ -218,6 +223,17 @@ class QrScanFragment : CoreFragment() {
             },
             onOpenHistory = { safeNavigate(R.id.toQrHistory) },
             onCloseToast = { viewModel.closeToast() }
+        )
+
+        QrRationaleCameraDialog(
+            enable = showRationaleDialog,
+            onDismissRequest = { showRationaleDialog = false },
+            onConfirm = {
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                val uri = Uri.fromParts("package", requireActivity().packageName, null)
+                intent.setData(uri)
+                cameraPermissionObserver.settingLauncher.launch(intent)
+            }
         )
     }
 }
@@ -444,10 +460,9 @@ fun HomeLayout(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier
                             .fillMaxWidth()
-
                             .clip(shape = RoundedCornerShape(50.dp))
                             .background(color = Color.Black)
-                            .padding(horizontal = 5.dp, vertical = 10.dp)
+                            .padding(horizontal = 10.dp, vertical = 10.dp)
                     ) {
                         CameraNavigationButton.entries.forEach {
                             CameraNavigationButtonLayout(
@@ -460,14 +475,14 @@ fun HomeLayout(
                                 }
                             )
 
-                            /*if (it != CameraNavigationButton.Import) {
+                            if (it != CameraNavigationButton.Import) {
                                 VerticalDivider(
                                     modifier = Modifier
                                         .height(20.dp)
-                                        .padding(horizontal = 3.dp)
-                                        .background(color = Color.White.copy(alpha = 0.75F))
+                                        .padding(horizontal = 5.dp)
+                                        .background(color = Color.White.copy(alpha = 0.16F))
                                 )
-                            }*/
+                            }
                         }
                     }
                 }

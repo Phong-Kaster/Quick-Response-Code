@@ -62,11 +62,14 @@ constructor(
         }
     }
 
+    /*************************************************
+     * processPhoto - this function process photo when app scans any Wifi QR
+     */
     fun processPhoto(
         imageProxy: ImageProxy?,
         gotoNextScreen: (WifiSSID, WifiPassword, WifiType) -> Unit = { _, _, _ -> },
     ) {
-        Log.d("SCANNER", "----------------------")
+        //Log.d("SCANNER", "----------------------")
         if (imageProxy == null) {
             _showToast.value = true
             return
@@ -80,6 +83,7 @@ constructor(
             return
         }
 
+
         scanner
             .process(inputImage)
             .addOnSuccessListener { barcodes ->
@@ -88,14 +92,18 @@ constructor(
                     return@addOnSuccessListener
                 }
 
+                /*val wifiBarcodes = barcodes.filter { it.valueType == Barcode.TYPE_WIFI }*/
+                if (barcodes.isEmpty()) {
+                    imageProxy.close()
+                    return@addOnSuccessListener
+                }
+
+
                 for (barcode in barcodes) {
                     val bounds = barcode.boundingBox
                     val corners = barcode.cornerPoints
                     val rawValue = barcode.rawValue
-
-                    Log.d("PHONG", "processPhoto - rawValue: $rawValue")
                     val valueType: Int = barcode.valueType
-
 
 
                     if (valueType == Barcode.TYPE_WIFI) {
@@ -105,17 +113,29 @@ constructor(
 
 
                         Log.d("SCANNER", "Barcode.TYPE_WIFI")
-                        Log.d("SCANNER", "ssid: ${ssid}")
-                        Log.d("SCANNER", "password: ${password}")
-                        Log.d("SCANNER", "type: ${type}")
+                        Log.d("SCANNER", "ssid: $ssid")
+                        Log.d("SCANNER", "password: $password")
 
                         _showToast.value = false
-                        imageProxy.close()
                         insertWifiQR(wifiSSID = ssid ?: "", wifiPassword = password ?: "")
                         gotoNextScreen(ssid ?: "", password ?: "", type)
-                    } else {
-                        Log.d("SCANNER", "Barcode.TYPE_NOT_VALID")
+                        break
+                    } else if (
+                        valueType == Barcode.TYPE_EMAIL ||
+                        valueType == Barcode.TYPE_PHONE ||
+                        valueType == Barcode.TYPE_ISBN ||
+                        valueType == Barcode.TYPE_PRODUCT ||
+                        valueType == Barcode.TYPE_CALENDAR_EVENT ||
+                        valueType == Barcode.TYPE_DRIVER_LICENSE ||
+                        valueType == Barcode.TYPE_GEO ||
+                        valueType == Barcode.TYPE_URL ||
+                        valueType == Barcode.TYPE_SMS ||
+                        valueType == Barcode.TYPE_CONTACT_INFO
+                    ) {
+                        Log.d("SCANNER", "Barcode.TYPE_NOT_VALID with value type $valueType")
                         _showToast.value = true
+                        imageProxy.close()
+                    } else {
                         imageProxy.close()
                     }
                 }
@@ -127,14 +147,19 @@ constructor(
             }
     }
 
+    /*************************************************
+     * processPhotoFromGallery - this function process photo when app receive a photo from gallery
+     */
     fun processPhotoFromGallery(
         inputImage: InputImage,
-        gotoNextScreen: (WifiSSID, WifiPassword, WifiType) -> Unit = { _, _, _ -> }
+        gotoNextScreen: (WifiSSID, WifiPassword) -> Unit = { _, _ -> }
     ) {
+        Log.d("PHONG", "processPhotoFromGallery ------------------- ")
         scanner
             .process(inputImage)
             .addOnSuccessListener { barcodes ->
                 if (barcodes.isEmpty()) {
+                    _showToast.value = true
                     return@addOnSuccessListener
                 }
 
@@ -148,29 +173,27 @@ constructor(
 
 
                     if (valueType == Barcode.TYPE_WIFI) {
-                        val ssid = barcode.wifi!!.ssid
-                        val password = barcode.wifi!!.password
-                        val type = barcode.wifi!!.encryptionType
+                        val ssid = barcode.wifi?.ssid
+                        val password = barcode.wifi?.password
+                        val type = barcode.wifi?.encryptionType
 
 
-                        Log.d("SCANNER", "Barcode.TYPE_WIFI")
-                        Log.d("SCANNER", "ssid: ${ssid}")
-                        Log.d("SCANNER", "password: ${password}")
-                        Log.d("SCANNER", "type: ${type}")
+                        Log.d("PHONG", "---------------------")
+                        Log.d("PHONG", "Barcode.TYPE_WIFI")
+                        Log.d("PHONG", "ssid: $ssid")
+                        Log.d("PHONG", "password: $password")
 
                         _showToast.value = false
-
-                        gotoNextScreen(ssid ?: "", password ?: "", type)
+                        gotoNextScreen(ssid ?: "", password ?: "")
                         insertWifiQR(wifiSSID = ssid ?: "", wifiPassword = password ?: "")
                     } else {
-                        Log.d("SCANNER", "Barcode.TYPE_NOT_VALID")
+                        Log.d("PHONG", "Barcode.TYPE_NOT_VALID with value type $valueType")
                         _showToast.value = true
-
                     }
                 }
             }
             .addOnFailureListener { exception: Exception ->
-                Log.d("SCANNER", "Home View Model - addOnFailureListener")
+                Log.d("PHONG", "Home View Model - addOnFailureListener")
                 exception.printStackTrace()
             }
     }

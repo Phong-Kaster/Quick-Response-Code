@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.qrgenerate.component
+package com.panda.wifipassword.ui.screen.qr.qrgenerate.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -92,34 +93,40 @@ fun WifiSecurityLevel(
                     tint = Color(0xFF5B5B5B)
                 )
 
-                DropdownMenu(
-                    modifier = Modifier
-                        .background(color = Color.White)
-                        .padding(horizontal = 25.dp),
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                MaterialTheme(
+                    shapes = MaterialTheme.shapes.copy(
+                        extraSmall = RoundedCornerShape(15.dp),
+                    )
                 ) {
-                    SecurityLevel.entries.forEach { option ->
-                        DropdownMenuItem(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(color = Color.White),
-                            text = {
-                                Text(
-                                    text = stringResource(id = option.text),
-                                    style = TextStyle(
-                                        color = Color.Black,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight(400)
+                    DropdownMenu(
+                        modifier = Modifier
+                            .background(color = Color.White)
+                            .padding(horizontal = 25.dp),
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        SecurityLevel.entries.forEach { option ->
+                            DropdownMenuItem(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(color = Color.White),
+                                text = {
+                                    Text(
+                                        text = stringResource(id = option.text),
+                                        style = TextStyle(
+                                            color = Color.Black,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight(400)
+                                        )
                                     )
-                                )
-                            },
-                            onClick = {
-                                expanded = false
-                                qrGenerateState.securityLevel = option
-                            }
-                        )
+                                },
+                                onClick = {
+                                    expanded = false
+                                    qrGenerateState.securityLevel = option
+                                }
+                            )
 
+                        }
                     }
                 }
             }

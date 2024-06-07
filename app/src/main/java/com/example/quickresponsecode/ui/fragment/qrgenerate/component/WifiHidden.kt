@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.qrgenerate.component
+package com.panda.wifipassword.ui.screen.qr.qrgenerate.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -45,7 +46,7 @@ fun WifiHidden(
         modifier = modifier.fillMaxWidth()
     ) {
         Text(
-            text = stringResource(R.string.hidden),
+            text = stringResource(R.string.hidden_wifi),
             style = TextStyle(
                 fontWeight = FontWeight(400),
                 fontSize = 14.sp
@@ -66,7 +67,7 @@ fun WifiHidden(
                 .clip(shape = RoundedCornerShape(25.dp))
                 .clickable { expanded = true }
                 .background(color = Color.White)
-                .padding(vertical = 16.dp, horizontal = 16.dp),
+                .padding(vertical = 15.dp, horizontal = 16.dp),
         ) {
             Text(
                 text =
@@ -89,53 +90,58 @@ fun WifiHidden(
                     contentDescription = null,
                     tint = Color(0xFF5B5B5B)
                 )
-
-                DropdownMenu(
-                    modifier = Modifier
-                        .background(color = Color.White)
-                        .padding(horizontal = 25.dp),
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                MaterialTheme(
+                    shapes = MaterialTheme.shapes.copy(
+                        extraSmall = RoundedCornerShape(15.dp),
+                    )
                 ) {
-                    DropdownMenuItem(
+                    DropdownMenu(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .background(color = Color.White),
-                        text = {
-                            Text(
-                                text = stringResource(R.string.yes),
-                                style = TextStyle(
-                                    color = Color.Black,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight(400)
+                            .background(color = Color.White)
+                            .padding(horizontal = 25.dp),
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(color = Color.White),
+                            text = {
+                                Text(
+                                    text = stringResource(R.string.yes),
+                                    style = TextStyle(
+                                        color = Color.Black,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight(400)
+                                    )
                                 )
-                            )
-                        },
-                        onClick = {
-                            expanded = false
-                            qrGenerateState.hidden = true
-                        }
-                    )
+                            },
+                            onClick = {
+                                expanded = false
+                                qrGenerateState.hidden = true
+                            }
+                        )
 
-                    DropdownMenuItem(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(color = Color.White),
-                        text = {
-                            Text(
-                                text = stringResource(R.string.no),
-                                style = TextStyle(
-                                    color = Color.Black,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight(400)
+                        DropdownMenuItem(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(color = Color.White),
+                            text = {
+                                Text(
+                                    text = stringResource(R.string.no),
+                                    style = TextStyle(
+                                        color = Color.Black,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight(400)
+                                    )
                                 )
-                            )
-                        },
-                        onClick = {
-                            expanded = false
-                            qrGenerateState.hidden = false
-                        }
-                    )
+                            },
+                            onClick = {
+                                expanded = false
+                                qrGenerateState.hidden = false
+                            }
+                        )
+                    }
                 }
             }
         }

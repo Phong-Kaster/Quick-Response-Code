@@ -1,4 +1,4 @@
-package com.example.quickresponsecode.ui.fragment.qrgenerate.component
+package com.panda.wifipassword.ui.screen.qr.qrgenerate.component
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.quickresponsecode.R
 import com.example.quickresponsecode.ui.fragment.qrgenerate.state.QrGenerateState
+
 
 @Composable
 fun WifiName(
@@ -56,7 +57,8 @@ fun WifiName(
                             color = Color(0xFFB0B0B0),
                             fontSize = 16.sp,
                             fontWeight = FontWeight(400)
-                        )
+                        ),
+                        modifier = Modifier.padding(vertical = 3.dp),
                     )
                 }
                 innerTextField()

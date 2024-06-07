@@ -2,12 +2,15 @@ package com.example.flashlightenhancedversion.lifecycleobserver
 
 import android.app.Activity
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.example.quickresponsecode.R
+import com.example.quickresponsecode.util.PermissionUtil
 import javax.inject.Inject
 
 typealias PermissionName = String
@@ -32,7 +35,7 @@ constructor(
     private val callback: Callback
 ) : DefaultLifecycleObserver {
     lateinit var launcher: ActivityResultLauncher<PermissionName>
-    private lateinit var settingLauncher: ActivityResultLauncher<Intent>
+    lateinit var settingLauncher: ActivityResultLauncher<Intent>
 
     private val tag = "NotificationRuntimeLauncher2"
     override fun onCreate(owner: LifecycleOwner) {
@@ -47,7 +50,7 @@ constructor(
             if (isGranted) {
                 // TODO: do nothing because everything we need is OK
             } else {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(activity, android.Manifest.permission.POST_NOTIFICATIONS)
+                if (ActivityCompat.shouldShowRequestPermissionRationale(activity, android.Manifest.permission.CAMERA)
                 ) {
                     // TODO: do nothing because Android system will request automatically
                 } else {
@@ -61,11 +64,20 @@ constructor(
      * To open app setting*/
     private fun createSystemLauncher(owner: LifecycleOwner): ActivityResultLauncher<Intent> {
         return registry.register("SettingAppLauncher", owner, ActivityResultContracts.StartActivityForResult()){
+            val enableAllPermissions = PermissionUtil.isCameraAccessible(context = activity)
 
+            if (enableAllPermissions) {
+                Toast.makeText(activity,
+                    activity.getString(R.string.camera_enabled), Toast.LENGTH_SHORT).show()
+            } else {
+                callback.requestPermissionsOneMoreTime()
+            }
         }
     }
 
     interface Callback {
         fun openRationaleDialog()
+
+        fun requestPermissionsOneMoreTime()
     }
 }
