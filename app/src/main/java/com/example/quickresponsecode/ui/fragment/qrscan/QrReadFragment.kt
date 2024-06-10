@@ -12,7 +12,6 @@ import android.util.Log
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -45,7 +44,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.os.bundleOf
-import androidx.fragment.app.FragmentManager.TAG
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavOptions
@@ -55,7 +53,6 @@ import com.example.quickresponsecode.R
 import com.example.quickresponsecode.data.enums.NetworkType
 import com.example.quickresponsecode.data.model.NetworkStatusState
 import com.example.quickresponsecode.ui.component.CoreTopBar2
-import com.example.quickresponsecode.ui.component.OutlineButton
 import com.example.quickresponsecode.ui.component.SolidButton
 import com.example.quickresponsecode.util.AppUtil
 import com.example.quickresponsecode.util.NavigationUtil.safeNavigate
@@ -267,7 +264,6 @@ class QrReadFragment : CoreFragment() {
                     WifiUtil.connectWifiOnAndroid9AndBelow(context = requireContext(), ssid = ssid, password = password)
                 }
             },
-            onShare = { showToast(requireContext().getString(R.string.share_with_my_community)) },
             onCopyToClipboard = {
                 AppUtil.copyToClipboard(
                     context = requireContext(),
@@ -335,8 +331,6 @@ fun QrReadLayout(
 
     onBack: () -> Unit = {},
     onConnect: () -> Unit = {},
-
-    onShare: () -> Unit = {},
     onCopyToClipboard: () -> Unit = {}
 ) {
     CoreLayout(
@@ -460,22 +454,6 @@ fun QrReadLayout(
                     backgroundColor = Color(0xFF1C68FB),
                     textColor = Color.White,
                     text = stringResource(id = R.string.connect),
-                    textStyle = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight(600)
-                    ),
-                    shape = RoundedCornerShape(25.dp)
-                )
-
-                OutlineButton(
-                    text = stringResource(R.string.share_with_my_community),
-                    modifier = Modifier.fillMaxWidth(),
-                    marginHorizontal = 0.dp,
-                    marginVertical = 0.dp,
-                    borderStroke = BorderStroke(width = 1.dp, color = Color(0xFF1C68FB)),
-                    onClick = onShare,
-                    backgroundColor = Color.White,
-                    textColor = Color(0xFF1C68FB),
                     textStyle = TextStyle(
                         fontSize = 16.sp,
                         fontWeight = FontWeight(600)
